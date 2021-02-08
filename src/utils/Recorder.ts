@@ -7,8 +7,6 @@ abstract class Recorder {
   private permission: "granted" | "denied" | "unasked";
   private recorder: MediaRecorder | null;
 
-  // private recording: MediaSource | null;
-
   private onPermissionChangeCallback: (status: "granted" | "denied") => void;
   private onStreamAvailableCallback: (stream: MediaStream) => void;
   private onRecordingAvailableCallback: (recording: Blob) => void;
@@ -19,7 +17,6 @@ abstract class Recorder {
     this.stream = null;
     this.permission = "unasked";
     this.recorder = null;
-    // this.recording = null;
     this.onPermissionChangeCallback = () => {};
     this.onStreamAvailableCallback = (stream: MediaStream) => {};
     this.onRecordingAvailableCallback = (recording: Blob) => {};
@@ -75,14 +72,6 @@ abstract class Recorder {
     this.permission = status;
     this.onPermissionChangeCallback(status);
   }
-
-  // protected addRecording(recording: Blob) {
-  //   if(!this.recording) {
-  //     throw new Error('Recording buffer not initialized!');
-  //   } else {
-  //     this.recording.addSourceBuffer(URL.createObjectURL(recording));
-  //   }
-  // }
 
   // Getters
   protected isRecording(): boolean {
