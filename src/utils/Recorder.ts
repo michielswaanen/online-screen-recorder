@@ -30,6 +30,7 @@ abstract class Recorder {
   public abstract askPermission(): void;
   public abstract switchDevice(deviceId: MediaDeviceInfo["deviceId"]): void;
   public abstract getDeviceOptions(): Promise<MediaDeviceInfo[]>;
+  public abstract getCurrentDevice(devices: MediaDeviceInfo[]): MediaDeviceInfo | undefined;
 
   // Events
   public onPermissionChange(cb: (status: "granted" | "denied") => void) {
@@ -64,6 +65,7 @@ abstract class Recorder {
     recorder.onstart = this.onStartCallback.bind(this, recorder.stream);
     recorder.onstop = this.onStopCallback;
     recorder.ondataavailable = (event: BlobEvent) => {
+      console.log(event.data)
       this.onRecordingAvailableCallback(event.data);
     };
   }
@@ -89,7 +91,7 @@ abstract class Recorder {
     return this.recorder
   }
 
-  protected getMediaStream(): MediaStream {
+  public getMediaStream(): MediaStream {
     if(!this.stream)
       throw new Error("Stream is not initialized");
 

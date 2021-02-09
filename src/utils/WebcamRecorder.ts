@@ -31,6 +31,7 @@ class WebcamRecorder extends Recorder {
     if (!this.isRecording()) {
       console.log("Not recording...")
     } else {
+      this.getMediaStream().getTracks()[0].stop();
       this.getMediaRecorder().stop();
     }
   }
@@ -86,6 +87,22 @@ class WebcamRecorder extends Recorder {
       console.log("New Stream", stream);
       this.setMediaStream(stream);
     });
+  }
+
+  public getCurrentDevice(devices: MediaDeviceInfo[]): MediaDeviceInfo | undefined {
+    const track: MediaStreamTrack = this.getMediaStream().getTracks()[0];
+    const currentDeviceId: string | undefined = track.getSettings().deviceId;
+
+    if(!currentDeviceId)
+      return undefined;
+
+    for (let device of devices) {
+      if(currentDeviceId === device.deviceId) {
+        return device;
+      }
+    }
+
+    return undefined;
   }
 }
 
