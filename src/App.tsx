@@ -3,9 +3,6 @@ import MicrophoneHandler from "./MicrophoneHandler";
 import WebcamHandler from "./WebcamHandler";
 import ScreenHandler from "./ScreenHandler";
 
-/**
- * gvuvihbkhbvhkbbhk
- */
 class App extends Component<any, any> {
 
   render() {

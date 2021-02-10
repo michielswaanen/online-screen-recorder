@@ -2,11 +2,6 @@ import { Component } from "react";
 import WebcamRecorder from "./utils/WebcamRecorder";
 
 interface State {
-  startDisabled: boolean,
-  stopDisabled: boolean,
-  switchDisabled: boolean,
-  recordingAvailable: boolean,
-  webcamEnabled: boolean,
   phase: "ask" | "setup" | "record" | "watch"
   devices: { audio: MediaDeviceInfo[], video: MediaDeviceInfo[] }
 }
@@ -16,11 +11,6 @@ class WebcamHandler extends Component<any, State> {
   private webcam: WebcamRecorder = new WebcamRecorder();
 
   public state: State = {
-    startDisabled: true,
-    stopDisabled: true,
-    switchDisabled: true,
-    recordingAvailable: false,
-    webcamEnabled: false,
     phase: "ask",
     devices: {audio: [], video: []}
   }
