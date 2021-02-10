@@ -13,11 +13,9 @@ class ScreenRecorder extends Recorder {
       if (this.isRecording()) {
         console.log("Already recording screen...")
       } else {
-        const track: MediaStreamTrack = this.getMediaStreamTrack();
-        const mimeType: string = this.getMimeType({ video: true, audio: false }).video;
+        const mimeType: string = this.getMimeType({ video: true, audio: true }).video;
 
-        const stream: MediaStream = new MediaStream([track]);
-        const recorder: MediaRecorder = new MediaRecorder(stream, {
+        const recorder: MediaRecorder = new MediaRecorder(this.getMediaStream(), {
           audioBitsPerSecond: 2500000,
           mimeType: mimeType
         });
@@ -32,7 +30,7 @@ class ScreenRecorder extends Recorder {
     if (!this.isRecording()) {
       console.log("Not recording screen...")
     } else {
-      this.getMediaStreamTrack().stop();
+      this.stopAllTracks();
       this.getMediaRecorder().stop();
     }
   }
@@ -40,44 +38,32 @@ class ScreenRecorder extends Recorder {
   public async askPermission(): Promise<void> {
     try {
       // @ts-ignore
-      const stream: MediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true});
-      const track = stream.getVideoTracks()[0];
+      const stream: MediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true});
 
       await this.setPermission("granted");
-      this.setMediaStreamTrack(track);
+      this.setMediaStream(stream);
     } catch (e) {
       await this.setPermission("denied");
     }
   }
 
   public async getDeviceOptions(): Promise<MediaDeviceInfo[]> {
-    const options: MediaDeviceInfo[] = []
-
-    const devices: MediaDeviceInfo[] = await navigator.mediaDevices.enumerateDevices();
-
-    for (let device of devices) {
-      if (device.kind == "videoinput") {
-        options.push(device);
-      }
-    }
-
-    return options;
+    return [];
   }
 
   public async switchDevice(deviceId: MediaDeviceInfo["deviceId"]): Promise<void> {
     try {
-      this.getMediaStreamTrack().stop();
+      this.stopAllTracks();
 
       //@ts-ignore
       const stream: MediaStream = await navigator.mediaDevices.getDisplayMedia({
         video: {
           deviceId: { exact: deviceId },
-        }
+        }, audio: true
       });
-      const track: MediaStreamTrack = stream.getAudioTracks()[0];
 
       console.log("New Screen Stream", stream);
-      this.setMediaStreamTrack(track);
+      this.setMediaStream(stream);
     } catch (e) {
       console.log(e)
       throw new Error("Couldn't fetch selected screen device!");

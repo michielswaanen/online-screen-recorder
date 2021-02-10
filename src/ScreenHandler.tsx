@@ -34,9 +34,9 @@ class ScreenHandler extends Component<any, State> {
       }
     }));
 
-    this.screen.onStreamTrackAvailable((track: MediaStreamTrack) => {
+    this.screen.onStreamTrackAvailable((stream: MediaStream) => {
       const screen: HTMLVideoElement = document.getElementById("screen-live") as HTMLVideoElement;
-      screen.srcObject = new MediaStream([track]);
+      screen.srcObject = stream;
     });
 
     this.screen.onStart(() => {

@@ -34,9 +34,9 @@ class MicrophoneHandler extends Component<any, State> {
       }
     }));
 
-    this.microphone.onStreamTrackAvailable((track: MediaStreamTrack) => {
+    this.microphone.onStreamTrackAvailable((stream: MediaStream) => {
       const microphone: HTMLAudioElement = document.getElementById("microphone-live") as HTMLAudioElement;
-      microphone.srcObject = new MediaStream([track]);
+      microphone.srcObject = stream;
     });
 
     this.microphone.onStart(() => {

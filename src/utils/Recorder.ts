@@ -3,32 +3,41 @@ import MimeTypeGenerator from "./mimetype/MimeTypeGenerator";
 
 abstract class Recorder {
 
-  private stream: MediaStreamTrack | null;
+  private stream: MediaStream | null;
   private permission: "granted" | "denied" | "unasked";
   private recorder: MediaRecorder | null;
 
   private onPermissionChangeCallback: (status: "granted" | "denied") => Promise<void>;
-  private onStreamAvailableCallback: (stream: MediaStreamTrack) => void;
+  private onStreamAvailableCallback: (stream: MediaStream) => void;
   private onRecordingAvailableCallback: (recording: Blob) => void;
-  private onStartCallback: (stream: MediaStreamTrack) => void;
+  private onStartCallback: (stream: MediaStream) => void;
   private onStopCallback: () => void;
 
   public constructor() {
     this.stream = null;
     this.permission = "unasked";
     this.recorder = null;
-    this.onPermissionChangeCallback = async () => {};
-    this.onStreamAvailableCallback = (stream: MediaStreamTrack) => {};
-    this.onRecordingAvailableCallback = (recording: Blob) => {};
-    this.onStartCallback = (stream: MediaStreamTrack) => {};
-    this.onStopCallback = () => {};
+    this.onPermissionChangeCallback = async () => {
+    };
+    this.onStreamAvailableCallback = (stream: MediaStream) => {
+    };
+    this.onRecordingAvailableCallback = (recording: Blob) => {
+    };
+    this.onStartCallback = (stream: MediaStream) => {
+    };
+    this.onStopCallback = () => {
+    };
   }
 
   // Functions
   public abstract start(): void;
+
   public abstract stop(): void;
+
   public abstract askPermission(): void;
+
   public abstract switchDevice(deviceId: MediaDeviceInfo["deviceId"]): Promise<void>;
+
   public abstract getDeviceOptions(): Promise<MediaDeviceInfo[]>;
 
   // Events
@@ -36,7 +45,7 @@ abstract class Recorder {
     this.onPermissionChangeCallback = cb;
   }
 
-  public onStreamTrackAvailable(cb: (track: MediaStreamTrack) => void) {
+  public onStreamTrackAvailable(cb: (stream: MediaStream) => void) {
     this.onStreamAvailableCallback = cb;
   }
 
@@ -44,7 +53,7 @@ abstract class Recorder {
     this.onRecordingAvailableCallback = cb
   }
 
-  public onStart(cb: (stream: MediaStreamTrack) => void) {
+  public onStart(cb: (stream: MediaStream) => void) {
     this.onStartCallback = cb;
   }
 
@@ -53,16 +62,15 @@ abstract class Recorder {
   }
 
   // Setters
-  protected setMediaStreamTrack(stream: MediaStreamTrack) {
+  protected setMediaStream(stream: MediaStream) {
     this.stream = stream;
     this.onStreamAvailableCallback(stream);
   }
 
   protected setMediaRecorder(recorder: MediaRecorder) {
     this.recorder = recorder;
-    const track: MediaStreamTrack = recorder.stream.getTracks()[0];
 
-    recorder.onstart = this.onStartCallback.bind(this, track);
+    recorder.onstart = this.onStartCallback.bind(this, recorder.stream);
     recorder.onstop = this.onStopCallback;
     recorder.ondataavailable = (event: BlobEvent) => {
       console.log(event.data)
@@ -75,6 +83,17 @@ abstract class Recorder {
     await this.onPermissionChangeCallback(status);
   }
 
+  protected stopAllTracks() {
+    const audioTrack: MediaStreamTrack = this.getMediaStreamTracks().audio;
+    const videoTrack: MediaStreamTrack = this.getMediaStreamTracks().video;
+
+    if(audioTrack !== undefined)
+      audioTrack.stop();
+
+    if(videoTrack !== undefined)
+      videoTrack.stop();
+  }
+
   // Getters
   protected isRecording(): boolean {
     return this.recorder !== null && this.recorder.state !== "inactive";
@@ -85,21 +104,28 @@ abstract class Recorder {
   }
 
   protected getMediaRecorder(): MediaRecorder {
-    if(!this.recorder)
+    if (!this.recorder)
       throw new Error("Recorder is not initialized");
 
     return this.recorder
   }
 
-  public getMediaStreamTrack(): MediaStreamTrack {
-    if(!this.stream)
+  public getMediaStream(): MediaStream {
+    if (!this.stream)
       throw new Error("Stream is not initialized");
 
     return this.stream
   }
 
-  protected getMimeType(query: {audio: boolean, video: boolean}): {audio: string, video: string} {
-    const result = {audio: "", video: ""};
+  public getMediaStreamTracks(): { video: MediaStreamTrack, audio: MediaStreamTrack } {
+    if (!this.stream)
+      throw new Error("Track are not initialized");
+
+    return { audio: this.stream.getAudioTracks()[0], video: this.stream.getVideoTracks()[0] };
+  }
+
+  protected getMimeType(query: { audio: boolean, video: boolean }): { audio: string, video: string } {
+    const result = { audio: "", video: "" };
     const generator = new MimeTypeGenerator();
 
 
@@ -120,20 +146,25 @@ abstract class Recorder {
     return result;
   }
 
-  protected getCurrentDevice(devices: MediaDeviceInfo[]): MediaDeviceInfo | undefined {
-    const track: MediaStreamTrack = this.getMediaStreamTrack();
-    const currentDeviceId: string | undefined = track.getSettings().deviceId;
+  protected getCurrentDevice(devices: MediaDeviceInfo[]): {video: MediaDeviceInfo | undefined, audio: MediaDeviceInfo | undefined} {
+    const videoTrack: MediaStreamTrack = this.getMediaStream().getVideoTracks()[0];
+    const currentVideoDeviceId: string | undefined = videoTrack.getSettings().deviceId;
 
-    if (!currentDeviceId)
-      return undefined;
+    const audioTrack: MediaStreamTrack = this.getMediaStream().getAudioTracks()[0];
+    const currentAudioDeviceId: string | undefined = audioTrack.getSettings().deviceId;
+
+    let videoDevice = undefined;
+    let audioDevice = undefined;
 
     for (let device of devices) {
-      if (currentDeviceId === device.deviceId) {
-        return device;
+      if (currentVideoDeviceId === device.deviceId) {
+        videoDevice = device;
+      } else if (currentAudioDeviceId === device.deviceId) {
+        audioDevice = device;
       }
     }
 
-    return undefined;
+    return {video: videoDevice, audio: audioDevice};
   }
 
 }

@@ -54,9 +54,9 @@ class WebcamHandler extends Component<any, State> {
       console.log("Webcam stream stopped!");
     });
 
-    this.webcam.onStreamTrackAvailable(((track: MediaStreamTrack) => {
+    this.webcam.onStreamTrackAvailable(((stream: MediaStream) => {
       const webcamVisual: HTMLVideoElement = document.getElementById("webcam-live") as HTMLVideoElement;
-      webcamVisual.srcObject = new MediaStream([track]);
+      webcamVisual.srcObject = stream;
     }));
 
     this.webcam.onRecordingAvailable((recording: Blob) => {

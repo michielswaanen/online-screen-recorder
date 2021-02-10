@@ -13,11 +13,9 @@ class MicrophoneRecorder extends Recorder {
       if (this.isRecording()) {
         console.log("Already recording microphone...")
       } else {
-        const track: MediaStreamTrack = this.getMediaStreamTrack();
         const mimeType: string = this.getMimeType({ video: false, audio: true }).audio;
 
-        const stream: MediaStream = new MediaStream([track]);
-        const recorder: MediaRecorder = new MediaRecorder(stream, {
+        const recorder: MediaRecorder = new MediaRecorder(this.getMediaStream(), {
           audioBitsPerSecond: 2500000,
           mimeType: mimeType
         });
@@ -32,7 +30,7 @@ class MicrophoneRecorder extends Recorder {
     if (!this.isRecording()) {
       console.log("Not recording microphone...")
     } else {
-      this.getMediaStreamTrack().stop();
+      this.stopAllTracks();
       this.getMediaRecorder().stop();
     }
   }
@@ -40,10 +38,9 @@ class MicrophoneRecorder extends Recorder {
   public async askPermission(): Promise<void> {
     try {
       const stream: MediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const track = stream.getAudioTracks()[0];
 
       await this.setPermission("granted");
-      this.setMediaStreamTrack(track);
+      this.setMediaStream(stream);
     } catch (e) {
       await this.setPermission("denied");
     }
@@ -65,16 +62,15 @@ class MicrophoneRecorder extends Recorder {
 
   public async switchDevice(deviceId: MediaDeviceInfo["deviceId"]): Promise<void> {
     try {
-      this.getMediaStreamTrack().stop();
+      this.stopAllTracks();
 
       const stream: MediaStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           deviceId: { exact: deviceId },
         }
       });
-      const track: MediaStreamTrack = stream.getAudioTracks()[0];
       console.log("New Audio Stream", stream);
-      this.setMediaStreamTrack(track);
+      this.setMediaStream(stream);
     } catch (e) {
       console.log(e)
       throw new Error("Couldn't fetch selected microphone device!");

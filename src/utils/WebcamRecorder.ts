@@ -13,11 +13,9 @@ class WebcamRecorder extends Recorder {
       if (this.isRecording()) {
         console.log("Already recording webcam...")
       } else {
-        const track: MediaStreamTrack = this.getMediaStreamTrack();
-        const mimeType: string = this.getMimeType({ video: true, audio: false }).video;
+        const mimeType: string = this.getMimeType({ video: true, audio: true }).video;
 
-        const stream: MediaStream = new MediaStream([track])
-        const recorder: MediaRecorder = new MediaRecorder(stream, {
+        const recorder: MediaRecorder = new MediaRecorder(this.getMediaStream(), {
           videoBitsPerSecond: 2500000,
           mimeType: mimeType
         });
@@ -32,18 +30,17 @@ class WebcamRecorder extends Recorder {
     if (!this.isRecording()) {
       console.log("Not recording webcam...")
     } else {
-      this.getMediaStreamTrack().stop();
+      this.stopAllTracks();
       this.getMediaRecorder().stop();
     }
   }
 
   public async askPermission(): Promise<void> {
     try {
-      const stream: MediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const track = stream.getVideoTracks()[0];
+      const stream: MediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
       await this.setPermission("granted");
-      this.setMediaStreamTrack(track);
+      this.setMediaStream(stream);
     }catch (e) {
       await this.setPermission("denied");
     }
@@ -65,15 +62,14 @@ class WebcamRecorder extends Recorder {
 
   public async switchDevice(deviceId: MediaDeviceInfo["deviceId"]): Promise<void> {
     try {
-      this.getMediaStreamTrack().stop();
+      this.stopAllTracks();
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           deviceId: {exact: deviceId},
-        }
+        }, audio: true
       });
-      const track: MediaStreamTrack = stream.getVideoTracks()[0];
-      this.setMediaStreamTrack(track);
+      this.setMediaStream(stream);
     } catch (e) {
       console.log(e)
       throw new Error("Couldn't fetch selected webcam device!");
