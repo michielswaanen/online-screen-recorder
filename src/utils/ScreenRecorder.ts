@@ -2,6 +2,13 @@ import Recorder from "./Recorder";
 
 class ScreenRecorder extends Recorder {
 
+  private readonly audioEnabled: boolean;
+
+  constructor(audioEnabled: boolean = true) {
+    super();
+    this.audioEnabled = audioEnabled;
+  }
+
   public start(): void {
     const permission: string = this.getPermission();
 
@@ -13,7 +20,7 @@ class ScreenRecorder extends Recorder {
       if (this.isRecording()) {
         console.log("Already recording screen...")
       } else {
-        const mimeType: string = this.getMimeType({ video: true, audio: true }).video;
+        const mimeType: string = this.getMimeType({ video: true, audio: this.audioEnabled }).video;
 
         const recorder: MediaRecorder = new MediaRecorder(this.getMediaStream(), {
           audioBitsPerSecond: 2500000,
@@ -38,7 +45,7 @@ class ScreenRecorder extends Recorder {
   public async askPermission(): Promise<void> {
     try {
       // @ts-ignore
-      const stream: MediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true});
+      const stream: MediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: this.audioEnabled});
 
       await this.setPermission("granted");
       this.setMediaStream(stream);
@@ -59,7 +66,7 @@ class ScreenRecorder extends Recorder {
       const stream: MediaStream = await navigator.mediaDevices.getDisplayMedia({
         video: {
           deviceId: { exact: deviceId },
-        }, audio: true
+        }, audio: this.audioEnabled
       });
 
       console.log("New Screen Stream", stream);

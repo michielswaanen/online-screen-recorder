@@ -2,6 +2,13 @@ import Recorder from "./Recorder";
 
 class WebcamRecorder extends Recorder {
 
+  private readonly audioEnabled: boolean;
+
+  constructor(audioEnabled: boolean = true) {
+    super();
+    this.audioEnabled = audioEnabled;
+  }
+
   public start() {
     const permission: string = this.getPermission();
 
@@ -13,7 +20,7 @@ class WebcamRecorder extends Recorder {
       if (this.isRecording()) {
         console.log("Already recording webcam...")
       } else {
-        const mimeType: string = this.getMimeType({ video: true, audio: true }).video;
+        const mimeType: string = this.getMimeType({ video: true, audio: this.audioEnabled }).video;
 
         const recorder: MediaRecorder = new MediaRecorder(this.getMediaStream(), {
           videoBitsPerSecond: 2500000,
@@ -37,11 +44,11 @@ class WebcamRecorder extends Recorder {
 
   public async askPermission(): Promise<void> {
     try {
-      const stream: MediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream: MediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: this.audioEnabled });
 
       await this.setPermission("granted");
       this.setMediaStream(stream);
-    }catch (e) {
+    } catch (e) {
       await this.setPermission("denied");
     }
   }
@@ -66,8 +73,8 @@ class WebcamRecorder extends Recorder {
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          deviceId: {exact: deviceId},
-        }, audio: true
+          deviceId: { exact: deviceId },
+        }, audio: this.audioEnabled
       });
       this.setMediaStream(stream);
     } catch (e) {
