@@ -50,22 +50,6 @@ class ScreenRecorder extends Recorder {
     }
   }
 
-  public getCurrentDevice(devices: MediaDeviceInfo[]): MediaDeviceInfo | undefined {
-    const track: MediaStreamTrack = this.getMediaStreamTrack();
-    const currentDeviceId: string | undefined = track.getSettings().deviceId;
-
-    if (!currentDeviceId)
-      return undefined;
-
-    for (let device of devices) {
-      if (currentDeviceId === device.deviceId) {
-        return device;
-      }
-    }
-
-    return undefined;
-  }
-
   public async getDeviceOptions(): Promise<MediaDeviceInfo[]> {
     const options: MediaDeviceInfo[] = []
 

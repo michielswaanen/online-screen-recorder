@@ -30,7 +30,6 @@ abstract class Recorder {
   public abstract askPermission(): void;
   public abstract switchDevice(deviceId: MediaDeviceInfo["deviceId"]): Promise<void>;
   public abstract getDeviceOptions(): Promise<MediaDeviceInfo[]>;
-  public abstract getCurrentDevice(devices: MediaDeviceInfo[]): MediaDeviceInfo | undefined;
 
   // Events
   public onPermissionChange(cb: (status: "granted" | "denied") => Promise<void>) {
@@ -119,6 +118,22 @@ abstract class Recorder {
     }
 
     return result;
+  }
+
+  protected getCurrentDevice(devices: MediaDeviceInfo[]): MediaDeviceInfo | undefined {
+    const track: MediaStreamTrack = this.getMediaStreamTrack();
+    const currentDeviceId: string | undefined = track.getSettings().deviceId;
+
+    if (!currentDeviceId)
+      return undefined;
+
+    for (let device of devices) {
+      if (currentDeviceId === device.deviceId) {
+        return device;
+      }
+    }
+
+    return undefined;
   }
 
 }
