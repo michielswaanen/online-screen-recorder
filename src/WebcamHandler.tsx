@@ -1,8 +1,5 @@
 import { Component } from "react";
 import WebcamRecorder from "./utils/WebcamRecorder";
-import MicrophoneRecorder from "./utils/MicrophoneRecorder";
-
-const webcam = new WebcamRecorder();
 
 interface State {
   startDisabled: boolean,
@@ -10,11 +7,13 @@ interface State {
   switchDisabled: boolean,
   recordingAvailable: boolean,
   webcamEnabled: boolean,
-  phase: "setup" | "record" | "watch"
+  phase: "ask" | "setup" | "record" | "watch"
   devices: MediaDeviceInfo[]
 }
 
 class WebcamHandler extends Component<any, State> {
+
+  private webcam: WebcamRecorder = new WebcamRecorder();
 
   public state: State = {
     startDisabled: true,
@@ -22,74 +21,54 @@ class WebcamHandler extends Component<any, State> {
     switchDisabled: true,
     recordingAvailable: false,
     webcamEnabled: false,
-    phase: "setup",
+    phase: "ask",
     devices: []
   }
 
   async componentDidMount() {
 
-    const devices = await webcam.getDeviceOptions();
-
-    this.setState({
-      devices: devices
-    })
-
     // Events
-    webcam.onPermissionChange((status: "granted" | "denied") => {
+    this.webcam.onPermissionChange(async (status: "granted" | "denied") => {
+      console.log("Video permission changed!")
       if (status === "granted") {
-        this.setState({
-          startDisabled: false,
-          switchDisabled: false,
-          stopDisabled: true
-        });
+        try {
+          const devices = await this.webcam.getDeviceOptions();
+          this.setState({
+            devices: devices,
+            phase: "setup"
+          });
+        } catch (e) {
+          throw new Error("Couldn't load video input devices!");
+        }
       }
 
       console.log('Permission changed to ' + status);
     });
 
-    webcam.onStart((stream) => {
-      this.setState({
-        startDisabled: true,
-        switchDisabled: true,
-        stopDisabled: false,
-        recordingAvailable: false
-      });
-
-      console.log('Callback started!');
+    this.webcam.onStart((stream) => {
+      console.log('Webcam stream started!');
     });
 
-    webcam.onStop(() => {
-      this.setState({
-        startDisabled: false,
-        switchDisabled: false,
-        stopDisabled: true
-      });
+    this.webcam.onStop(() => {
+      this.setState({phase: "watch"});
 
-      console.log("Callback stopped!");
+      console.log("Webcam stream stopped!");
     });
 
-    webcam.onStreamAvailable((stream => {
-      console.log('New Stream!', stream)
+    this.webcam.onStreamTrackAvailable(((track: MediaStreamTrack) => {
       const webcamVisual: HTMLVideoElement = document.getElementById("webcam-live") as HTMLVideoElement;
-      webcamVisual.srcObject = stream;
+      webcamVisual.srcObject = new MediaStream([track]);
     }));
 
-    webcam.onRecordingAvailable((recording => {
-      console.log("Data available!!!", recording);
-
-      this.setState({
-        recordingAvailable: true
-      })
-
+    this.webcam.onRecordingAvailable((recording: Blob) => {
       const webcamVisual: HTMLVideoElement = document.getElementById("webcam-recording") as HTMLVideoElement;
-      webcamVisual.srcObject = null
       webcamVisual.src = URL.createObjectURL(recording);
-    }))
+    });
   }
 
   private switchDevice = async () => {
     const devices: HTMLSelectElement = document.getElementById("webcam-options") as HTMLSelectElement;
-    webcam.switchDevice(devices.value);
+    await this.webcam.switchDevice(devices.value);
   }
 
   renderOptions() {
@@ -102,56 +81,56 @@ class WebcamHandler extends Component<any, State> {
     )
   }
 
-  renderSetup() {
-    const enable = this.state.webcamEnabled;
-
-    if (enable) {
-      return(
-        <div>
-          <video autoPlay={ true } height={ 360 } width={ 540 } id="webcam-live" />
-          { this.renderOptions() }
-          <button disabled={ this.state.switchDisabled } onClick={ this.switchDevice }>Switch</button>
-          <button onClick={() => this.setState({phase: "record"})}>Looks great, next!</button>
-        </div>
-      )
-    } else {
-      return(
-        <div>
-          <button onClick={async () => {
-            try {
-              await webcam.askPermission();
-              this.setState({webcamEnabled: true});
-            } catch (e) {
-              this.setState({webcamEnabled: false});
-            }
-          } }>Enable Webcam</button>
-        </div>
-      )
-    }
+  public renderAskPhase() {
+    return (
+      <div>
+        <button onClick={ () => this.webcam.askPermission() }>
+          Enable Webcam
+        </button>
+      </div>
+    )
   }
 
-  renderRecord() {
+  public renderSetup() {
+    return (
+      <div>
+        Move!
+        <video autoPlay={ true } height={ 360 } width={ 540 } id="webcam-live" />
+        <select name="webcam-options" id="webcam-options">
+          { this.state.devices.map((device => {
+            return <option value={ device.deviceId }>{ device.label }</option>
+          })) }
+        </select>
+        <button onClick={ this.switchDevice }>Switch</button>
+
+        <button onClick={() => {this.setState({phase: "record"})}}>I see myself clearly, next!</button>
+      </div>
+    )
+  }
+
+  public renderRecord() {
     return (
       <div>
         <video autoPlay={ true } height={ 360 } width={ 540 } id="webcam-live" />
-        <button disabled={ this.state.startDisabled } onClick={ webcam.start }>Start</button>
-        <button disabled={ this.state.stopDisabled } onClick={ () => {this.setState({phase: "watch"}); webcam.stop()} }>Stop</button>
-
+        <button onClick={ this.webcam.start.bind(this.webcam) }>Start</button>
+        <button onClick={ () => {this.setState({phase: "watch"}); this.webcam.stop()} }>Stop</button>
       </div>
     )
   }
 
-  renderWatch() {
+  public renderWatch() {
     return(
       <div>
         <video autoPlay={ false } controls height={ 720 } width={ 1080 } id="webcam-recording"/>
-        <button onClick={() => {this.setState({phase: "setup"}); }}>Record again</button>
+        <button onClick={() => {this.setState({phase: "ask"}); }}>Record again</button>
       </div>
     )
   }
 
-  render() {
-    if(this.state.phase === "setup") {
+  public render() {
+    if (this.state.phase === "ask") {
+      return this.renderAskPhase();
+    } else if(this.state.phase === "setup") {
       return this.renderSetup();
     } else if (this.state.phase === "record") {
       return this.renderRecord();

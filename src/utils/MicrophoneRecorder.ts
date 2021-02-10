@@ -2,20 +2,21 @@ import Recorder from "./Recorder";
 
 class MicrophoneRecorder extends Recorder {
 
-  start(): void {
+  public start(): void {
     const permission: string = this.getPermission();
 
     if (permission === "denied") {
-      console.log("Permission denied")
+      console.log("Permission denied for microphone")
     } else if (permission === "unasked") {
-      console.log("No permission yet")
+      console.log("No microphone permission yet")
     } else {
       if (this.isRecording()) {
-        console.log("Already recording...")
+        console.log("Already recording microphone...")
       } else {
-        const stream: MediaStream = this.getMediaStream();
+        const track: MediaStreamTrack = this.getMediaStreamTrack();
         const mimeType: string = this.getMimeType({ video: false, audio: true }).audio;
 
+        const stream: MediaStream = new MediaStream([track]);
         const recorder: MediaRecorder = new MediaRecorder(stream, {
           audioBitsPerSecond: 2500000,
           mimeType: mimeType
@@ -27,28 +28,29 @@ class MicrophoneRecorder extends Recorder {
     }
   }
 
-  stop(): void {
+  public stop(): void {
     if (!this.isRecording()) {
-      console.log("Not recording...")
+      console.log("Not recording microphone...")
     } else {
-      this.getMediaStream().getTracks()[0].stop();
+      this.getMediaStreamTrack().stop();
       this.getMediaRecorder().stop();
     }
   }
 
-  askPermission(): Promise<void> {
-    const stream: Promise<MediaStream> = navigator.mediaDevices.getUserMedia({ audio: true });
+  public async askPermission(): Promise<void> {
+    try {
+      const stream: MediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const track = stream.getAudioTracks()[0];
 
-    return stream.then((stream: MediaStream) => {
-      this.setPermission("granted");
-      this.setMediaStream(stream);
-    }).catch(() => {
-      this.setPermission("denied");
-    });
+      await this.setPermission("granted");
+      this.setMediaStreamTrack(track);
+    } catch (e) {
+      await this.setPermission("denied");
+    }
   }
 
-  getCurrentDevice(devices: MediaDeviceInfo[]): MediaDeviceInfo | undefined {
-    const track: MediaStreamTrack = this.getMediaStream().getTracks()[0];
+  public getCurrentDevice(devices: MediaDeviceInfo[]): MediaDeviceInfo | undefined {
+    const track: MediaStreamTrack = this.getMediaStreamTrack();
     const currentDeviceId: string | undefined = track.getSettings().deviceId;
 
     if (!currentDeviceId)
@@ -63,7 +65,7 @@ class MicrophoneRecorder extends Recorder {
     return undefined;
   }
 
-  async getDeviceOptions(): Promise<MediaDeviceInfo[]> {
+  public async getDeviceOptions(): Promise<MediaDeviceInfo[]> {
     const options: MediaDeviceInfo[] = []
 
     const devices: MediaDeviceInfo[] = await navigator.mediaDevices.enumerateDevices();
@@ -77,17 +79,22 @@ class MicrophoneRecorder extends Recorder {
     return options;
   }
 
-  switchDevice(deviceId: MediaDeviceInfo["deviceId"]): void {
-    const stream = navigator.mediaDevices.getUserMedia({
-      audio: {
-        deviceId: { exact: deviceId },
-      }
-    });
+  public async switchDevice(deviceId: MediaDeviceInfo["deviceId"]): Promise<void> {
+    try {
+      this.getMediaStreamTrack().stop();
 
-    stream.then((stream: MediaStream) => {
+      const stream: MediaStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          deviceId: { exact: deviceId },
+        }
+      });
+      const track: MediaStreamTrack = stream.getAudioTracks()[0];
       console.log("New Audio Stream", stream);
-      this.setMediaStream(stream);
-    });
+      this.setMediaStreamTrack(track);
+    } catch (e) {
+      console.log(e)
+      throw new Error("Couldn't fetch selected microphone device!");
+    }
   }
 }
 

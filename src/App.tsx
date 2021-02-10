@@ -1,5 +1,6 @@
 import { Component } from "react";
 import MicrophoneHandler from "./MicrophoneHandler";
+import WebcamHandler from "./WebcamHandler";
 
 class App extends Component<any, any> {
 
@@ -9,6 +10,7 @@ class App extends Component<any, any> {
     return(
       <div>
         <MicrophoneHandler />
+        <WebcamHandler />
       </div>
     )
   }

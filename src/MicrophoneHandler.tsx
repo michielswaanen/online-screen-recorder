@@ -9,36 +9,44 @@ interface State {
 
 class MicrophoneHandler extends Component<any, State> {
 
+  private microphone: MicrophoneRecorder = new MicrophoneRecorder();
+
   public state: State = {
     enabled: false,
     phase: "ask",
     devices: []
   }
 
-  private microphone: MicrophoneRecorder = new MicrophoneRecorder();
-
   public async componentDidMount() {
 
     this.microphone.onPermissionChange((async (status: "granted" | "denied") => {
+      console.log("Audio permission changed!")
       if (status === "granted") {
-        this.setState({
-          devices: await this.microphone.getDeviceOptions(),
-          phase: "setup"
-        });
+        try {
+          const devices = await this.microphone.getDeviceOptions();
+          this.setState({
+            devices: devices,
+            phase: "setup"
+          });
+        } catch (e) {
+          throw new Error("Couldn't load audio input devices!");
+        }
       }
     }));
 
-    this.microphone.onStreamAvailable((stream: MediaStream) => {
+    this.microphone.onStreamTrackAvailable((track: MediaStreamTrack) => {
       const microphone: HTMLAudioElement = document.getElementById("microphone-live") as HTMLAudioElement;
-      microphone.srcObject = stream;
+      microphone.srcObject = new MediaStream([track]);
     });
 
     this.microphone.onStart(() => {
-
+      console.log("Audio stream started");
     });
 
     this.microphone.onStop(() => {
       this.setState({phase: "watch"});
+
+      console.log("Audio stream stopped!");
     });
 
     this.microphone.onRecordingAvailable((recording: Blob) => {
@@ -49,7 +57,7 @@ class MicrophoneHandler extends Component<any, State> {
 
   private switchDevice = async () => {
     const devices: HTMLSelectElement = document.getElementById("webcam-options") as HTMLSelectElement;
-    this.microphone.switchDevice(devices.value);
+    await this.microphone.switchDevice(devices.value);
   }
 
   public renderAskPhase() {
@@ -93,7 +101,7 @@ class MicrophoneHandler extends Component<any, State> {
     return(
       <div>
         <audio autoPlay={ false } controls id="microphone-recording" />
-        <button onClick={() => {this.setState({phase: "setup"}); }}>Record again</button>
+        <button onClick={() => {this.setState({phase: "ask"}); }}>Record again</button>
       </div>
     )
   }

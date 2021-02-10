@@ -3,24 +3,24 @@ import MimeTypeGenerator from "./MimeTypeGenerator";
 
 abstract class Recorder {
 
-  private stream: MediaStream | null;
+  private stream: MediaStreamTrack | null;
   private permission: "granted" | "denied" | "unasked";
   private recorder: MediaRecorder | null;
 
-  private onPermissionChangeCallback: (status: "granted" | "denied") => void;
-  private onStreamAvailableCallback: (stream: MediaStream) => void;
+  private onPermissionChangeCallback: (status: "granted" | "denied") => Promise<void>;
+  private onStreamAvailableCallback: (stream: MediaStreamTrack) => void;
   private onRecordingAvailableCallback: (recording: Blob) => void;
-  private onStartCallback: (stream: MediaStream) => void;
+  private onStartCallback: (stream: MediaStreamTrack) => void;
   private onStopCallback: () => void;
 
   public constructor() {
     this.stream = null;
     this.permission = "unasked";
     this.recorder = null;
-    this.onPermissionChangeCallback = () => {};
-    this.onStreamAvailableCallback = (stream: MediaStream) => {};
+    this.onPermissionChangeCallback = async () => {};
+    this.onStreamAvailableCallback = (stream: MediaStreamTrack) => {};
     this.onRecordingAvailableCallback = (recording: Blob) => {};
-    this.onStartCallback = (stream: MediaStream) => {};
+    this.onStartCallback = (stream: MediaStreamTrack) => {};
     this.onStopCallback = () => {};
   }
 
@@ -28,16 +28,16 @@ abstract class Recorder {
   public abstract start(): void;
   public abstract stop(): void;
   public abstract askPermission(): void;
-  public abstract switchDevice(deviceId: MediaDeviceInfo["deviceId"]): void;
+  public abstract switchDevice(deviceId: MediaDeviceInfo["deviceId"]): Promise<void>;
   public abstract getDeviceOptions(): Promise<MediaDeviceInfo[]>;
   public abstract getCurrentDevice(devices: MediaDeviceInfo[]): MediaDeviceInfo | undefined;
 
   // Events
-  public onPermissionChange(cb: (status: "granted" | "denied") => void) {
+  public onPermissionChange(cb: (status: "granted" | "denied") => Promise<void>) {
     this.onPermissionChangeCallback = cb;
   }
 
-  public onStreamAvailable(cb: (stream: MediaStream) => void) {
+  public onStreamTrackAvailable(cb: (track: MediaStreamTrack) => void) {
     this.onStreamAvailableCallback = cb;
   }
 
@@ -45,7 +45,7 @@ abstract class Recorder {
     this.onRecordingAvailableCallback = cb
   }
 
-  public onStart(cb: (stream: MediaStream) => void) {
+  public onStart(cb: (stream: MediaStreamTrack) => void) {
     this.onStartCallback = cb;
   }
 
@@ -54,15 +54,16 @@ abstract class Recorder {
   }
 
   // Setters
-  protected setMediaStream(stream: MediaStream) {
+  protected setMediaStreamTrack(stream: MediaStreamTrack) {
     this.stream = stream;
     this.onStreamAvailableCallback(stream);
   }
 
   protected setMediaRecorder(recorder: MediaRecorder) {
     this.recorder = recorder;
+    const track: MediaStreamTrack = recorder.stream.getTracks()[0];
 
-    recorder.onstart = this.onStartCallback.bind(this, recorder.stream);
+    recorder.onstart = this.onStartCallback.bind(this, track);
     recorder.onstop = this.onStopCallback;
     recorder.ondataavailable = (event: BlobEvent) => {
       console.log(event.data)
@@ -70,9 +71,9 @@ abstract class Recorder {
     };
   }
 
-  protected setPermission(status: "granted" | "denied") {
+  protected async setPermission(status: "granted" | "denied"): Promise<void> {
     this.permission = status;
-    this.onPermissionChangeCallback(status);
+    await this.onPermissionChangeCallback(status);
   }
 
   // Getters
@@ -91,7 +92,7 @@ abstract class Recorder {
     return this.recorder
   }
 
-  public getMediaStream(): MediaStream {
+  public getMediaStreamTrack(): MediaStreamTrack {
     if(!this.stream)
       throw new Error("Stream is not initialized");
 
