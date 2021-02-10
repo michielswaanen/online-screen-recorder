@@ -1,5 +1,5 @@
-import mimeTypes from "./MimeTypes";
-import MimeTypeGenerator from "./MimeTypeGenerator";
+import mimeTypes from "./mimetype/MimeTypes";
+import MimeTypeGenerator from "./mimetype/MimeTypeGenerator";
 
 abstract class Recorder {
 

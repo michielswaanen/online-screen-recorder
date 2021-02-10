@@ -20,7 +20,7 @@ class MicrophoneHandler extends Component<any, State> {
   public async componentDidMount() {
 
     this.microphone.onPermissionChange((async (status: "granted" | "denied") => {
-      console.log("Audio permission changed!")
+      console.log("Microphone permission changed!")
       if (status === "granted") {
         try {
           const devices = await this.microphone.getDeviceOptions();

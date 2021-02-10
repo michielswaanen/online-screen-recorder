@@ -45,13 +45,12 @@ class WebcamHandler extends Component<any, State> {
       console.log('Permission changed to ' + status);
     });
 
-    this.webcam.onStart((stream) => {
+    this.webcam.onStart(() => {
       console.log('Webcam stream started!');
     });
 
     this.webcam.onStop(() => {
-      this.setState({phase: "watch"});
-
+      this.setState({ phase: "watch" });
       console.log("Webcam stream stopped!");
     });
 
@@ -71,14 +70,8 @@ class WebcamHandler extends Component<any, State> {
     await this.webcam.switchDevice(devices.value);
   }
 
-  renderOptions() {
-    return (
-      <select name="webcam-options" id="webcam-options">
-        { this.state.devices.map((device => {
-          return <option value={ device.deviceId }>{ device.label }</option>
-        })) }
-      </select>
-    )
+  public renderLiveWebcam() {
+    return <video autoPlay={ true } height={ 360 } width={ 540 } id="webcam-live"/>
   }
 
   public renderAskPhase() {
@@ -95,7 +88,7 @@ class WebcamHandler extends Component<any, State> {
     return (
       <div>
         Move!
-        <video autoPlay={ true } height={ 360 } width={ 540 } id="webcam-live" />
+        { this.renderLiveWebcam() }
         <select name="webcam-options" id="webcam-options">
           { this.state.devices.map((device => {
             return <option value={ device.deviceId }>{ device.label }</option>
@@ -103,7 +96,10 @@ class WebcamHandler extends Component<any, State> {
         </select>
         <button onClick={ this.switchDevice }>Switch</button>
 
-        <button onClick={() => {this.setState({phase: "record"})}}>I see myself clearly, next!</button>
+        <button onClick={ () => {
+          this.setState({ phase: "record" })
+        } }>I see myself clearly, next!
+        </button>
       </div>
     )
   }
@@ -111,18 +107,25 @@ class WebcamHandler extends Component<any, State> {
   public renderRecord() {
     return (
       <div>
-        <video autoPlay={ true } height={ 360 } width={ 540 } id="webcam-live" />
+        { this.renderLiveWebcam() }
         <button onClick={ this.webcam.start.bind(this.webcam) }>Start</button>
-        <button onClick={ () => {this.setState({phase: "watch"}); this.webcam.stop()} }>Stop</button>
+        <button onClick={ () => {
+          this.setState({ phase: "watch" });
+          this.webcam.stop()
+        } }>Stop
+        </button>
       </div>
     )
   }
 
   public renderWatch() {
-    return(
+    return (
       <div>
-        <video autoPlay={ false } controls height={ 720 } width={ 1080 } id="webcam-recording"/>
-        <button onClick={() => {this.setState({phase: "ask"}); }}>Record again</button>
+        <video autoPlay={ false } controls height={ 360 } width={ 540 } id="webcam-recording"/>
+        <button onClick={ () => {
+          this.setState({ phase: "ask" });
+        } }>Record again
+        </button>
       </div>
     )
   }
@@ -130,7 +133,7 @@ class WebcamHandler extends Component<any, State> {
   public render() {
     if (this.state.phase === "ask") {
       return this.renderAskPhase();
-    } else if(this.state.phase === "setup") {
+    } else if (this.state.phase === "setup") {
       return this.renderSetup();
     } else if (this.state.phase === "record") {
       return this.renderRecord();
