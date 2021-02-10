@@ -54,8 +54,8 @@ class ScreenRecorder extends Recorder {
     }
   }
 
-  public async getDeviceOptions(): Promise<MediaDeviceInfo[]> {
-    return [];
+  public async getDeviceOptions(): Promise<{video: MediaDeviceInfo[], audio: MediaDeviceInfo[]}> {
+    return {video: [], audio: []};
   }
 
   public async switchDevice(deviceId: MediaDeviceInfo["deviceId"]): Promise<void> {

@@ -25,7 +25,7 @@ class MicrophoneHandler extends Component<any, State> {
         try {
           const devices = await this.microphone.getDeviceOptions();
           this.setState({
-            devices: devices,
+            devices: devices.audio,
             phase: "setup"
           });
         } catch (e) {

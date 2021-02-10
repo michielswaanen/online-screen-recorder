@@ -53,34 +53,44 @@ class WebcamRecorder extends Recorder {
     }
   }
 
-  public async getDeviceOptions(): Promise<MediaDeviceInfo[]> {
-    const options: MediaDeviceInfo[] = []
+  public async getDeviceOptions(): Promise<{video: MediaDeviceInfo[], audio: MediaDeviceInfo[]}> {
+    const audioDevices: MediaDeviceInfo[] = []
+    const videoDevices: MediaDeviceInfo[] = []
 
     const devices: MediaDeviceInfo[] = await navigator.mediaDevices.enumerateDevices();
 
     for (let device of devices) {
       if (device.kind == "videoinput") {
-        options.push(device);
+        videoDevices.push(device);
+      } else if (device.kind == "audioinput" && this.audioEnabled) {
+        audioDevices.push(device);
       }
     }
 
-    return options;
+    return {video: videoDevices, audio: audioDevices};
   }
 
-  public async switchDevice(deviceId: MediaDeviceInfo["deviceId"]): Promise<void> {
+  public async switchDevice(audioDeviceId: MediaDeviceInfo["deviceId"], videoDeviceId: MediaDeviceInfo["deviceId"]): Promise<void> {
     try {
       this.stopAllTracks();
 
       const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          deviceId: {exact: audioDeviceId}
+        },
         video: {
-          deviceId: { exact: deviceId },
-        }, audio: this.audioEnabled
+          deviceId: {exact: videoDeviceId}
+        }
       });
       this.setMediaStream(stream);
     } catch (e) {
       console.log(e)
       throw new Error("Couldn't fetch selected webcam device!");
     }
+  }
+
+  public isAudioEnabled(): boolean {
+    return this.audioEnabled;
   }
 }
 

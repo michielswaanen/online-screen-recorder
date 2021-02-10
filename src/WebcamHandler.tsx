@@ -8,7 +8,7 @@ interface State {
   recordingAvailable: boolean,
   webcamEnabled: boolean,
   phase: "ask" | "setup" | "record" | "watch"
-  devices: MediaDeviceInfo[]
+  devices: { audio: MediaDeviceInfo[], video: MediaDeviceInfo[] }
 }
 
 class WebcamHandler extends Component<any, State> {
@@ -22,7 +22,7 @@ class WebcamHandler extends Component<any, State> {
     recordingAvailable: false,
     webcamEnabled: false,
     phase: "ask",
-    devices: []
+    devices: {audio: [], video: []}
   }
 
   async componentDidMount() {
@@ -66,12 +66,36 @@ class WebcamHandler extends Component<any, State> {
   }
 
   private switchDevice = async () => {
-    const devices: HTMLSelectElement = document.getElementById("webcam-options") as HTMLSelectElement;
-    await this.webcam.switchDevice(devices.value);
+    const switchToWebcamDevice: HTMLSelectElement = document.getElementById("webcam-options") as HTMLSelectElement;
+    const switchToMicrophoneDevice: HTMLSelectElement = document.getElementById("microphone-options") as HTMLSelectElement;
+
+    await this.webcam.switchDevice(switchToMicrophoneDevice.value, switchToWebcamDevice.value);
   }
 
   public renderLiveWebcam() {
     return <video autoPlay={ true } height={ 360 } width={ 540 } id="webcam-live"/>
+  }
+
+  public renderWebcamSelection() {
+    return <div>
+      <select id="webcam-options">
+        { this.state.devices.video.map((device => {
+          return <option value={ device.deviceId }>{ device.label }</option>
+        })) }
+      </select>
+    </div>
+  }
+
+  public renderMicrophoneSelection() {
+    if(this.webcam.isAudioEnabled()) {
+      return <div>
+        <select id="microphone-options">
+          { this.state.devices.audio.map((device => {
+            return <option value={ device.deviceId }>{ device.label }</option>
+          })) }
+        </select>
+      </div>
+    }
   }
 
   public renderAskPhase() {
@@ -89,11 +113,9 @@ class WebcamHandler extends Component<any, State> {
       <div>
         Move!
         { this.renderLiveWebcam() }
-        <select name="webcam-options" id="webcam-options">
-          { this.state.devices.map((device => {
-            return <option value={ device.deviceId }>{ device.label }</option>
-          })) }
-        </select>
+
+        {this.renderWebcamSelection()}
+        {this.renderMicrophoneSelection()}
         <button onClick={ this.switchDevice }>Switch</button>
 
         <button onClick={ () => {

@@ -46,18 +46,18 @@ class MicrophoneRecorder extends Recorder {
     }
   }
 
-  public async getDeviceOptions(): Promise<MediaDeviceInfo[]> {
-    const options: MediaDeviceInfo[] = []
+  public async getDeviceOptions(): Promise<{ video: MediaDeviceInfo[], audio: MediaDeviceInfo[] }> {
+    const audioDevices: MediaDeviceInfo[] = []
 
     const devices: MediaDeviceInfo[] = await navigator.mediaDevices.enumerateDevices();
 
     for (let device of devices) {
       if (device.kind == "audioinput") {
-        options.push(device);
+        audioDevices.push(device);
       }
     }
 
-    return options;
+    return { video: [], audio: audioDevices };
   }
 
   public async switchDevice(deviceId: MediaDeviceInfo["deviceId"]): Promise<void> {

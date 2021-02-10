@@ -17,16 +17,11 @@ abstract class Recorder {
     this.stream = null;
     this.permission = "unasked";
     this.recorder = null;
-    this.onPermissionChangeCallback = async () => {
-    };
-    this.onStreamAvailableCallback = (stream: MediaStream) => {
-    };
-    this.onRecordingAvailableCallback = (recording: Blob) => {
-    };
-    this.onStartCallback = (stream: MediaStream) => {
-    };
-    this.onStopCallback = () => {
-    };
+    this.onPermissionChangeCallback = async () => {};
+    this.onStreamAvailableCallback = (stream: MediaStream) => {};
+    this.onRecordingAvailableCallback = (recording: Blob) => {};
+    this.onStartCallback = (stream: MediaStream) => {};
+    this.onStopCallback = () => {};
   }
 
   // Functions
@@ -36,9 +31,9 @@ abstract class Recorder {
 
   public abstract askPermission(): void;
 
-  public abstract switchDevice(deviceId: MediaDeviceInfo["deviceId"]): Promise<void>;
+  public abstract switchDevice(audioDeviceId: MediaDeviceInfo["deviceId"], videoDeviceId: MediaDeviceInfo["deviceId"]): Promise<void>;
 
-  public abstract getDeviceOptions(): Promise<MediaDeviceInfo[]>;
+  public abstract getDeviceOptions(): Promise<{video: MediaDeviceInfo[], audio: MediaDeviceInfo[]}>;
 
   // Events
   public onPermissionChange(cb: (status: "granted" | "denied") => Promise<void>) {
@@ -87,10 +82,10 @@ abstract class Recorder {
     const audioTrack: MediaStreamTrack = this.getMediaStreamTracks().audio;
     const videoTrack: MediaStreamTrack = this.getMediaStreamTracks().video;
 
-    if(audioTrack !== undefined)
+    if (audioTrack !== undefined)
       audioTrack.stop();
 
-    if(videoTrack !== undefined)
+    if (videoTrack !== undefined)
       videoTrack.stop();
   }
 
@@ -146,7 +141,7 @@ abstract class Recorder {
     return result;
   }
 
-  protected getCurrentDevice(devices: MediaDeviceInfo[]): {video: MediaDeviceInfo | undefined, audio: MediaDeviceInfo | undefined} {
+  public getCurrentDevice(devices: MediaDeviceInfo[]): { video: MediaDeviceInfo | undefined, audio: MediaDeviceInfo | undefined } {
     const videoTrack: MediaStreamTrack = this.getMediaStream().getVideoTracks()[0];
     const currentVideoDeviceId: string | undefined = videoTrack.getSettings().deviceId;
 
@@ -164,7 +159,7 @@ abstract class Recorder {
       }
     }
 
-    return {video: videoDevice, audio: audioDevice};
+    return { video: videoDevice, audio: audioDevice };
   }
 
 }

@@ -4,7 +4,6 @@ import ScreenRecorder from "./utils/ScreenRecorder";
 interface State {
   enabled: boolean
   phase: "ask" | "setup" | "record" | "watch"
-  devices: MediaDeviceInfo[]
 }
 
 class ScreenHandler extends Component<any, State> {
@@ -14,7 +13,6 @@ class ScreenHandler extends Component<any, State> {
   public state: State = {
     enabled: false,
     phase: "ask",
-    devices: []
   }
 
   public async componentDidMount() {
@@ -23,9 +21,7 @@ class ScreenHandler extends Component<any, State> {
       console.log("Screen permission changed!")
       if (status === "granted") {
         try {
-          const devices = await this.screen.getDeviceOptions();
           this.setState({
-            devices: devices,
             phase: "setup"
           });
         } catch (e) {
