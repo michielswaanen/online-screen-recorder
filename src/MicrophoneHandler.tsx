@@ -62,7 +62,7 @@ class MicrophoneHandler extends Component<any, State> {
 
   public renderAskPhase() {
     return (
-      <div>
+      <div className="bg-teal-500 md:bg-red-500 lg:bg-blue-500">
         <button onClick={ () => this.microphone.askPermission() }>
           Enable Microphone
         </button>
