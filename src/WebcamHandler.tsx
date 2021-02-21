@@ -59,7 +59,7 @@ class WebcamHandler extends Component<any, State> {
     const switchToWebcamDevice: HTMLSelectElement = document.getElementById("webcam-options") as HTMLSelectElement;
     const switchToMicrophoneDevice: HTMLSelectElement = document.getElementById("microphone-options") as HTMLSelectElement;
 
-    await this.webcam.switchDevice(switchToMicrophoneDevice.value, switchToWebcamDevice.value);
+    // await this.webcam.switchDevice(switchToMicrophoneDevice.value, switchToWebcamDevice.value);
   }
 
   public renderLiveWebcam() {

@@ -53,7 +53,7 @@ class WebcamRecorder extends Recorder {
     }
   }
 
-  public async getDeviceOptions(): Promise<{video: MediaDeviceInfo[], audio: MediaDeviceInfo[]}> {
+  public async getDeviceOptions(): Promise<{ video: MediaDeviceInfo[], audio: MediaDeviceInfo[] }> {
     const audioDevices: MediaDeviceInfo[] = []
     const videoDevices: MediaDeviceInfo[] = []
 
@@ -67,21 +67,21 @@ class WebcamRecorder extends Recorder {
       }
     }
 
-    return {video: videoDevices, audio: audioDevices};
+    return { video: videoDevices, audio: audioDevices };
   }
 
-  public async switchDevice(audioDeviceId: MediaDeviceInfo["deviceId"], videoDeviceId: MediaDeviceInfo["deviceId"]): Promise<void> {
+  public async switchDevice(deviceId: MediaDeviceInfo["deviceId"], type: "video" | "audio"): Promise<void> {
     try {
       this.stopAllTracks();
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          deviceId: {exact: audioDeviceId}
-        },
-        video: {
-          deviceId: {exact: videoDeviceId}
-        }
-      });
+      let constraints: MediaStreamConstraints = {}
+
+      if (type === "video")
+        constraints = { video: { deviceId: { exact: deviceId } } }
+      else
+        constraints = { audio: { deviceId: { exact: deviceId } } }
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       this.setMediaStream(stream);
     } catch (e) {
       console.log(e)
