@@ -1,107 +1,132 @@
 import { Component } from "react";
-import WebcamRecorder from "./utils/WebcamRecorder";
+import WebcamMediaDevice from "./utils/WebcamMediaDevice";
+import MicrophoneMediaDevice from "./utils/MicrophoneMediaDevice";
 
 interface State {
-  status: "awaiting" | "granted" | "denied"
-  devices: { audio: MediaDeviceInfo[], video: MediaDeviceInfo[] }
+  webcams: MediaDevices,
+  microphones: MediaDevices,
 }
 
-class DevicePreview extends Component<any, any> {
+interface Props {
+  webcam: WebcamMediaDevice
+  microphone: MicrophoneMediaDevice
+}
 
-  private webcam: WebcamRecorder = new WebcamRecorder();
+type MediaDevices = {
+  options: MediaDeviceInfo[],
+  status: "awaiting" | "granted" | "denied"
+}
+
+class DevicePreview extends Component<Props, State> {
+
+  private webcam: WebcamMediaDevice = this.props.webcam;
+  private microphone: MicrophoneMediaDevice = this.props.microphone;
 
   public state: State = {
-    status: "awaiting",
-    devices: {audio: [], video: []}
+    webcams: {options: [], status: "awaiting"},
+    microphones: {options: [], status: "awaiting"},
   }
 
   public componentDidMount() {
-    this.webcam.askPermission();
+
+    this.microphone.onPermissionChange(async (status: "granted" | "denied") => {
+      if (status === "granted") {
+        try {
+          const options = await this.microphone.options();
+          this.setState({
+            microphones: {
+              status: "granted",
+              options: options
+            },
+          });
+        } catch (e) {
+          console.log("Something went wrong")
+          throw new Error("Something went wrong while permission modification")
+        }
+      } else {
+        this.setState({
+          microphones: {
+            status: "denied",
+            options: []
+          },
+        });
+      }
+    });
 
     this.webcam.onPermissionChange(async (status: "granted" | "denied") => {
       if (status === "granted") {
         try {
-          const devices = await this.webcam.getDeviceOptions();
+          const options = await this.webcam.options();
           this.setState({
-            devices: devices,
-            status: "granted"
+            webcams: {
+              status: "granted",
+              options: options
+            },
           });
         } catch (e) {
-          this.setState({
-            status: "denied"
-          });
+          console.log("Something went wrong")
+          throw new Error("Something went wrong while permission modification")
         }
+      } else {
+        this.setState({
+          webcams: {
+            status: "denied",
+            options: []
+          },
+        });
       }
     });
   }
 
-  public renderWebcam() {
-
-  }
-
   public renderWebcamSelection() {
-    if (this.state.status === "granted") {
+    if (this.state.webcams.status === "granted") {
       return <div>
         <select id="webcam-options"
-                onChange={(e) => this.webcam.switchDevice(e.target.value, "video")}>
-          { this.state.devices.video.map(device => {
-            return <option value={ device.deviceId }>{ device.label }</option>
+                onChange={ (e) => this.webcam.select(e.target.value) }>
+          { this.state.webcams.options.map(webcam => {
+            return <option value={ webcam.deviceId }>{ webcam.label }</option>
           }) }
         </select>
       </div>
+    } else if (this.state.webcams.status === "denied") {
+      return <div>
+        Webcam access denied
+      </div>
     } else {
       return <div>
-        Awaiting...
+        Requesting webcam access...
       </div>
     }
   }
 
   public renderMicrophoneSelection() {
-    if(this.state.status === "granted" && this.webcam.isAudioEnabled()) {
+    if (this.state.microphones.status === "granted") {
       return <div>
         <select id="microphone-options"
-                onChange={(e) => this.webcam.switchDevice(e.target.value, "audio")}>
-          { this.state.devices.audio.map((device => {
-            return <option value={ device.deviceId }>{ device.label }</option>
+                onChange={ (e) => this.microphone.select(e.target.value) }>
+          { this.state.microphones.options.map((microphone => {
+            return <option value={ microphone.deviceId }>{ microphone.label }</option>
           })) }
         </select>
       </div>
-    } else if (!this.webcam.isAudioEnabled()) {
+    } else if (this.state.microphones.status === "denied") {
       return <div>
-        Microphone disabled
+        Microphone access denied
       </div>
     } else {
       return <div>
-        Awaiting...
+        Requesting microphone access...
       </div>
     }
   }
 
   public render() {
     return (
-      <div id="page-container" className="flex flex-col mx-auto w-full min-h-screen bg-gray-100">
-        <main id="page-content" className="flex flex-auto flex-col max-w-full">
-
-          <div className="max-w-10xl mx-auto p-10 lg:p-8 w-full">
-
-            <div className="flex items-center justify-center rounded-lg bg-gray-50 border-2 text-gray-500 text-lg py-64">
-
-            </div>
-
-          </div>
-        </main>
-
-        <main id="page-content" className="flex flex-auto flex-col max-w-full">
-
-          <div className="max-w-10xl mx-auto p-10 lg:p-8 w-full">
-
-            <div className="flex items-center justify-center rounded-lg bg-gray-50 border-2 text-gray-500 text-lg py-64">
-              { this.renderWebcamSelection()}
-              { this.renderMicrophoneSelection()}
-            </div>
-
-          </div>
-        </main>
+      <div>
+        <div>
+          { this.renderWebcamSelection() }
+          { this.renderMicrophoneSelection() }
+        </div>
       </div>
     )
   }

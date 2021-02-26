@@ -77,9 +77,9 @@ class WebcamRecorder extends Recorder {
       let constraints: MediaStreamConstraints = {}
 
       if (type === "video")
-        constraints = { video: { deviceId: { exact: deviceId } } }
+        constraints = { video: { deviceId: { exact: deviceId } }, audio: true }
       else
-        constraints = { audio: { deviceId: { exact: deviceId } } }
+        constraints = { audio: { deviceId: { exact: deviceId } }, video: true }
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       this.setMediaStream(stream);
@@ -91,6 +91,10 @@ class WebcamRecorder extends Recorder {
 
   public isAudioEnabled(): boolean {
     return this.audioEnabled;
+  }
+
+  public isRecording(): boolean {
+    return super.isRecording();
   }
 }
 
