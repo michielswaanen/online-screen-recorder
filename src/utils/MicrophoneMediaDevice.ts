@@ -2,12 +2,6 @@ import MediaDevice from "./MediaDevice";
 
 class MicrophoneMediaDevice extends MediaDevice {
 
-  public preview(): void {
-  }
-
-  public close(): void {
-  }
-
   public async options(): Promise<MediaDeviceInfo[]> {
     const result: MediaDeviceInfo[] = []
 

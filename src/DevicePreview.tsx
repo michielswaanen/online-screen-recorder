@@ -23,8 +23,8 @@ class DevicePreview extends Component<Props, State> {
   private microphone: MicrophoneMediaDevice = this.props.microphone;
 
   public state: State = {
-    webcams: {options: [], status: "awaiting"},
-    microphones: {options: [], status: "awaiting"},
+    webcams: { options: [], status: "awaiting" },
+    microphones: { options: [], status: "awaiting" },
   }
 
   public componentDidMount() {
@@ -84,7 +84,7 @@ class DevicePreview extends Component<Props, State> {
         <select id="webcam-options"
                 onChange={ (e) => this.webcam.select(e.target.value) }>
           { this.state.webcams.options.map(webcam => {
-            return <option value={ webcam.deviceId }>{ webcam.label }</option>
+            return <option key={ webcam.deviceId } value={ webcam.deviceId }>{ webcam.label }</option>
           }) }
         </select>
       </div>
@@ -105,7 +105,7 @@ class DevicePreview extends Component<Props, State> {
         <select id="microphone-options"
                 onChange={ (e) => this.microphone.select(e.target.value) }>
           { this.state.microphones.options.map((microphone => {
-            return <option value={ microphone.deviceId }>{ microphone.label }</option>
+            return <option key={ microphone.deviceId } value={ microphone.deviceId }>{ microphone.label }</option>
           })) }
         </select>
       </div>

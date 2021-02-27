@@ -36,6 +36,12 @@ class RecordPreviewButton extends Component<Props, State> {
       this.setState({ allowed: false });
     })
 
+    this.webcam.onPermissionChange(async status => {
+      if (status === "denied") {
+        this.setState({ allowed: false });
+      }
+    });
+
     this.microphone.onAvailable(() => {
       if (this.webcam.getPermission() === "granted") {
         this.setState({ allowed: true });
@@ -44,7 +50,13 @@ class RecordPreviewButton extends Component<Props, State> {
 
     this.microphone.onUnavailable(() => {
       this.setState({ allowed: false });
-    })
+    });
+
+    this.microphone.onPermissionChange(async status => {
+      if (status === "denied") {
+        this.setState({ allowed: false });
+      }
+    });
   }
 
   public renderButton() {
