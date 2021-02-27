@@ -4,7 +4,7 @@ abstract class MediaDevice {
   private permission: "granted" | "denied" | "unasked";
 
   private onPermissionChangeCallback: (status: "granted" | "denied") => Promise<void>;
-  private onAvailableCallback: (stream: MediaStream) => void;
+  private onAvailableCallback: {(stream: MediaStream): void}[];
   private onUnavailableCallback: () => void;
   private onCloseCallback: () => void;
 
@@ -12,7 +12,7 @@ abstract class MediaDevice {
     this.stream = null;
     this.permission = "unasked";
     this.onPermissionChangeCallback = async () => {};
-    this.onAvailableCallback = (stream: MediaStream) => {};
+    this.onAvailableCallback = [];
     this.onUnavailableCallback = () => {};
     this.onCloseCallback = () => {};
   }
@@ -32,7 +32,7 @@ abstract class MediaDevice {
   }
 
   public onAvailable(cb: (stream: MediaStream) => void) {
-    this.onAvailableCallback = cb;
+    this.onAvailableCallback.push(cb);
   }
 
   public onClose(cb: () => void) {
@@ -41,6 +41,14 @@ abstract class MediaDevice {
 
   public onUnavailable(cb: () => void) {
     this.onUnavailableCallback = cb;
+  }
+
+  // Util
+  private static emitEvent(callbacks: {(stream: MediaStream): void}[], stream: MediaStream) {
+    console.log("REGISTERED CALLBACKS", callbacks);
+    for (let callback of callbacks) {
+      callback(stream);
+    }
   }
 
   // Setters
@@ -52,7 +60,7 @@ abstract class MediaDevice {
   protected setMediaStream(stream: MediaStream) {
     this.stream = stream;
     console.log("SET", stream)
-    this.onAvailableCallback(stream);
+    MediaDevice.emitEvent(this.onAvailableCallback, stream);
     console.log("CALLED")
   }
 
@@ -93,7 +101,6 @@ abstract class MediaDevice {
   public getSelected(): string | undefined {
     return this.getMediaStream().getTracks()[0].getSettings().deviceId;
   }
-
 }
 
 export default MediaDevice;

@@ -14,6 +14,7 @@ class WebcamPreview extends Component<Props, any> {
     const webcamVisual: HTMLVideoElement = document.getElementById(WEBCAM_ELEMENT_ID) as HTMLVideoElement;
 
     webcam.onAvailable((stream: MediaStream) => {
+      console.log("WEBCAM PREVIEW CALLED")
       webcamVisual.srcObject = stream;
     });
 

@@ -8,8 +8,8 @@ interface State {
 }
 
 interface Props {
-  webcam: WebcamMediaDevice
-  microphone: MicrophoneMediaDevice
+  webcam: WebcamMediaDevice,
+  microphone: MicrophoneMediaDevice,
 }
 
 type MediaDevices = {

@@ -26,6 +26,7 @@ class RecordPreviewButton extends Component<Props, State> {
   public componentDidMount() {
 
     this.webcam.onAvailable(() => {
+      console.log("BUTTON AVAILABLE CALLED")
       if (this.microphone.getPermission() === "granted") {
         this.setState({ allowed: true });
       }

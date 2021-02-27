@@ -14,7 +14,7 @@ class App extends Component<any, any> {
     microphone.select();
 
     return (
-      <div id="page-container" className="bg-gray-100">
+      <div>
         <WebcamPreview webcam={ webcam }/>
         <DevicePreview webcam={ webcam } microphone={ microphone }/>
         <RecordPreviewButton webcam={ webcam } microphone={ microphone }/>
