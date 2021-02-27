@@ -11,14 +11,10 @@ abstract class MediaDevice {
   public constructor() {
     this.stream = null;
     this.permission = "unasked";
-    this.onPermissionChangeCallback = async () => {
-    };
-    this.onAvailableCallback = (stream: MediaStream) => {
-    };
-    this.onUnavailableCallback = () => {
-    };
-    this.onCloseCallback = () => {
-    };
+    this.onPermissionChangeCallback = async () => {};
+    this.onAvailableCallback = (stream: MediaStream) => {};
+    this.onUnavailableCallback = () => {};
+    this.onCloseCallback = () => {};
   }
 
   // Functions
@@ -55,7 +51,9 @@ abstract class MediaDevice {
 
   protected setMediaStream(stream: MediaStream) {
     this.stream = stream;
+    console.log("SET", stream)
     this.onAvailableCallback(stream);
+    console.log("CALLED")
   }
 
   protected async setPermission(status: "granted" | "denied"): Promise<void> {
