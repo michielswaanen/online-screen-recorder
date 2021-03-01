@@ -2,27 +2,30 @@
 
 class MediaDeviceEventHandler {
 
-  private map: Map<string, Array<(...args: any[]) => void>>
+  private map: Map<(...args: any[]) => void, Array<(...args: any[]) => void>>
 
 
   constructor() {
     this.map = new Map();
   }
 
-  public register(event: string, callback: (...args: any[]) => void) {
+  public register(event: (...args: any[]) => void, callback: (...args: any[]) => void) {
     let callbacks = this.map.get(event) || new Array<() => void>();
     callbacks.push(callback);
     this.map.set(event, callbacks);
-    console.log(this.map);
   }
 
-  public unregister(event: string, callback: (...args: any[]) => void) {
+  public unregister(event: (...args: any[]) => void, callback: (...args: any[]) => void) {
     let callbacks = this.map.get(event) || new Array<() => void>();
-    callbacks = callbacks.filter(item => item !== callback);
-    this.map.set(event, callbacks);
+    console.log("BEFORE")
+    console.log(callbacks)
+    const newCallbacks = callbacks.filter(item => item !== callback);
+    console.log("AFTER")
+    console.log(newCallbacks)
+    this.map.set(event, newCallbacks);
   }
 
-  public emit(event: string, ...data: any[]) {
+  public emit(event: (...args: any[]) => void, ...data: any[]) {
     let callbacks = this.map.get(event) || new Array<(...args: any[])  => void>();
     for (let cb of callbacks) {
       cb(...data);

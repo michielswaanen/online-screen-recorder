@@ -26,15 +26,15 @@ abstract class MediaDevice {
 
   // Events
   public onPermissionChange(cb: (status: "granted" | "denied") => Promise<void>) {
-    this.eventHandler.register("permission", cb);
+    this.eventHandler.register(this.onPermissionChange, cb);
   }
 
   public onAvailable(cb: (stream: MediaStream) => void) {
-    this.eventHandler.register("available", cb);
+    this.eventHandler.register(this.onAvailable, cb);
   }
 
   public onUnavailable(cb: () => void) {
-    this.eventHandler.register("unavailable", cb);
+    this.eventHandler.register(this.onUnavailable, cb);
   }
 
   // Setters
@@ -54,13 +54,13 @@ abstract class MediaDevice {
   protected setMediaStream(stream: MediaStream) {
     this.stream = stream;
 
-    this.eventHandler.emit("available", stream)
+    this.eventHandler.emit(this.onAvailable, stream)
   }
 
   protected async setPermission(status: "granted" | "denied"): Promise<void> {
     this.permission = status;
 
-    this.eventHandler.emit("permission", status);
+    this.eventHandler.emit(this.onPermissionChange, status);
   }
 
   /**
@@ -72,7 +72,7 @@ abstract class MediaDevice {
         track.stop();
       });
 
-      this.eventHandler.emit("unavailable");
+      this.eventHandler.emit(this.onUnavailable);
     }
   }
 

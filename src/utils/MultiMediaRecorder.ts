@@ -4,6 +4,7 @@ import MimeTypeGenerator from "./mimetype/MimeTypeGenerator";
 import mimeTypes from "./mimetype/MimeTypes";
 import MultiMediaDevice from "./MultiMediaDevice";
 import ScreenMediaDevice from "./ScreenMediaDevice";
+import MediaDeviceEventHandler from "./MediaDeviceEventHandler";
 
 
 class MultiMediaRecorder {
@@ -13,6 +14,7 @@ class MultiMediaRecorder {
   private screenRecorder: MediaRecorder;
   private recordings: { person: Blob | undefined, screen: Blob | undefined};
 
+  private eventHandler: MediaDeviceEventHandler;
 
   // Events
   private onReadyCallback: { (): void }[];
@@ -22,6 +24,7 @@ class MultiMediaRecorder {
   public constructor(multiMediaDevice: MultiMediaDevice) {
     this.multiMediaDevice = multiMediaDevice;
     this.recordings = { person: undefined, screen: undefined };
+    this.eventHandler = new MediaDeviceEventHandler();
 
     const webcam: WebcamMediaDevice = this.multiMediaDevice.getWebcam();
     const microphone: MicrophoneMediaDevice = this.multiMediaDevice.getMicrophone();
@@ -31,7 +34,7 @@ class MultiMediaRecorder {
     this.onNotReadyCallback = [];
     this.onFinishCallback = [];
 
-    this.multiMediaDevice.onReady(() => {
+    this.multiMediaDevice.onReadyEvent(() => {
       const personStream = new MediaStream([webcam.getTrack(), microphone.getTrack()]);
       const screenStream = new MediaStream([screen.getTrack()]);
       const mimeType = this.getMimeType({ video: true, audio: true });
@@ -54,7 +57,7 @@ class MultiMediaRecorder {
       }
     });
 
-    this.multiMediaDevice.onNotReady(() => {
+    this.multiMediaDevice.onNotReadyEvent(() => {
       for (let callback of this.onNotReadyCallback) {
         callback()
       }

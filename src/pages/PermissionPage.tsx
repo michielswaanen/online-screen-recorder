@@ -13,19 +13,21 @@ class PermissionPage extends Component<Props, any> {
 
   public readonly devices = this.props.devices;
 
-
+  // Lifecycle
   public componentDidMount() {
-    if(this.devices.areReady()) {
-      this.props.continueCallback();
-    } else {
-      this.devices.onReady(this.continueCallback);
-    }
+    this.devices.onReadyEvent(this.continueCallback);
   }
 
+  public componentWillUnmount() {
+    this.devices.unregisterEvent(this.devices.onReadyEvent, this.continueCallback);
+  }
+
+  // Callbacks
   private continueCallback = () => {
     this.props.continueCallback();
   }
 
+  // Rendering
   public render() {
     const screen: ScreenMediaDevice = this.devices.getScreen();
     const webcam: WebcamMediaDevice = this.devices.getWebcam();

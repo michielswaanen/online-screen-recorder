@@ -2,6 +2,7 @@ import WebcamMediaDevice from "./WebcamMediaDevice";
 import MicrophoneMediaDevice from "./MicrophoneMediaDevice";
 import ScreenMediaDevice from "./ScreenMediaDevice";
 import { MediaDeviceType } from "./MediaDevice";
+import MediaDeviceEventHandler from "./MediaDeviceEventHandler";
 
 class MultiMediaDevice {
 
@@ -10,8 +11,8 @@ class MultiMediaDevice {
   private readonly screen: ScreenMediaDevice;
   private ready: { webcam: boolean, microphone: boolean, screen: boolean };
 
-  private onReadyCallback: { (): void }[];
-  private onNotReadyCallback: { (): void }[];
+  private eventHandler: MediaDeviceEventHandler;
+
 
   public constructor(webcam: WebcamMediaDevice, microphone: MicrophoneMediaDevice, screen: ScreenMediaDevice) {
     this.webcam = webcam;
@@ -19,63 +20,62 @@ class MultiMediaDevice {
     this.screen = screen;
     this.ready = { webcam: false, microphone: false, screen: false };
 
-    this.onReadyCallback = [];
-    this.onNotReadyCallback = [];
+    this.eventHandler = new MediaDeviceEventHandler();
 
     this.webcam.onAvailable(() => {
-      console.log("WEBCAM AVAILABLE")
-      this.setReady(true, MediaDeviceType.WEBCAM, this.onReadyCallback);
+      this.setReady(true, MediaDeviceType.WEBCAM);
     });
 
     this.webcam.onUnavailable(() => {
-      this.setReady(false, MediaDeviceType.WEBCAM, this.onNotReadyCallback);
+      this.setReady(false, MediaDeviceType.WEBCAM);
     })
 
     this.webcam.onPermissionChange(async status => {
-      console.log("WEBCAM PERMISSION CHANGE RECEIVED TO ", status);
       if (status === "denied") {
-        this.setReady(false, MediaDeviceType.WEBCAM, this.onNotReadyCallback);
+        this.setReady(false, MediaDeviceType.WEBCAM);
       }
     });
 
     this.microphone.onAvailable(() => {
-      console.log("MIC AVAILABLE")
-      this.setReady(true, MediaDeviceType.MICROPHONE, this.onReadyCallback);
+      this.setReady(true, MediaDeviceType.MICROPHONE);
     });
 
     this.microphone.onUnavailable(() => {
-      this.setReady(false, MediaDeviceType.MICROPHONE, this.onNotReadyCallback);
+      this.setReady(false, MediaDeviceType.MICROPHONE);
     });
 
     this.microphone.onPermissionChange(async status => {
       if (status === "denied") {
-        this.setReady(false, MediaDeviceType.MICROPHONE, this.onNotReadyCallback);
+        this.setReady(false, MediaDeviceType.MICROPHONE);
       }
     });
 
     this.screen.onAvailable(() => {
-      console.log("SCREEN AVAILABLE")
-      this.setReady(true, MediaDeviceType.SCREEN, this.onReadyCallback);
+      this.setReady(true, MediaDeviceType.SCREEN);
     });
 
     this.screen.onUnavailable(() => {
-      this.setReady(false, MediaDeviceType.SCREEN, this.onNotReadyCallback);
+      this.setReady(false, MediaDeviceType.SCREEN);
     });
 
     this.screen.onPermissionChange(async status => {
       if (status === "denied") {
-        this.setReady(false, MediaDeviceType.SCREEN, this.onNotReadyCallback);
+        this.setReady(false, MediaDeviceType.SCREEN);
       }
     });
   }
 
   // Events
-  public onReady(cb: () => void) {
-    this.onReadyCallback.push(cb);
+  public onReadyEvent(cb: () => void) {
+    this.eventHandler.register(this.onReadyEvent, cb)
   }
 
-  public onNotReady(cb: () => void) {
-    this.onNotReadyCallback.push(cb);
+  public onNotReadyEvent(cb: () => void) {
+    this.eventHandler.register(this.onNotReadyEvent, cb)
+  }
+
+  public unregisterEvent(event: (...args: any[]) => void, cb: () => void) {
+    this.eventHandler.unregister(event, cb);
   }
 
   // Getters
@@ -96,7 +96,7 @@ class MultiMediaDevice {
   }
 
   // Setters
-  private setReady(ready: boolean, device: MediaDeviceType, callbacks: { (): void }[]) {
+  private setReady(ready: boolean, device: MediaDeviceType) {
     switch (device) {
       case MediaDeviceType.WEBCAM:
         this.ready = { ...this.ready, webcam: ready };
@@ -111,13 +111,12 @@ class MultiMediaDevice {
         throw new Error('MediaDeviceType not yet supported in MultiMediaDevice')
     }
 
-    console.log("DEVICE STATUS READY:")
-    console.log(this.ready);
-
-    if (this.ready.webcam && this.ready.microphone && this.ready.screen) {
-      for (let callback of callbacks) {
-        callback();
+    if(ready) {
+      if (this.ready.webcam && this.ready.microphone && this.ready.screen) {
+        this.eventHandler.emit(this.onReadyEvent);
       }
+    } else {
+      this.eventHandler.emit(this.onNotReadyEvent);
     }
   }
 }
