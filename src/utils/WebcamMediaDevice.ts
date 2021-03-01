@@ -1,12 +1,6 @@
-import MediaDevice from "./MediaDevice";
+import MediaDevice, { MediaDeviceType } from "./MediaDevice";
 
 class WebcamMediaDevice extends MediaDevice {
-
-  public preview(): void {
-  }
-
-  public close(): void {
-  }
 
   public async options(): Promise<MediaDeviceInfo[]> {
     const result: MediaDeviceInfo[] = []
@@ -23,7 +17,7 @@ class WebcamMediaDevice extends MediaDevice {
   public async select(deviceId: string | undefined = undefined) {
     try {
       const constraints: MediaStreamConstraints = !deviceId ? { video: true } : { video: { deviceId: { exact: deviceId } } };
-      const stream = await this.prompt(constraints);
+      const stream = await this.prompt(constraints, MediaDeviceType.WEBCAM);
 
       await this.setPermission("granted");
       this.setMediaStream(stream);

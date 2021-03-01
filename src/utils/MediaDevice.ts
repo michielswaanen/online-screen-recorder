@@ -1,18 +1,22 @@
+import MediaDeviceEventHandler from "./MediaDeviceEventHandler";
+
+enum MediaDeviceType {
+  SCREEN,
+  WEBCAM,
+  MICROPHONE
+}
+
 abstract class MediaDevice {
 
   private stream: MediaStream | null;
   private permission: "granted" | "denied" | "unasked";
 
-  private onPermissionChangeCallback: { (status: "granted" | "denied"): Promise<void> }[];
-  private onAvailableCallback: { (stream: MediaStream): void }[];
-  private onUnavailableCallback: { (): void }[];
+  private eventHandler: MediaDeviceEventHandler;
 
   public constructor() {
     this.stream = null;
     this.permission = "unasked";
-    this.onPermissionChangeCallback = [];
-    this.onAvailableCallback = [];
-    this.onUnavailableCallback = [];
+    this.eventHandler = new MediaDeviceEventHandler();
   }
 
   // Functions
@@ -22,37 +26,41 @@ abstract class MediaDevice {
 
   // Events
   public onPermissionChange(cb: (status: "granted" | "denied") => Promise<void>) {
-    this.onPermissionChangeCallback.push(cb);
+    this.eventHandler.register("permission", cb);
   }
 
   public onAvailable(cb: (stream: MediaStream) => void) {
-    this.onAvailableCallback.push(cb);
+    this.eventHandler.register("available", cb);
   }
 
   public onUnavailable(cb: () => void) {
-    this.onUnavailableCallback.push(cb);
+    this.eventHandler.register("unavailable", cb);
   }
 
   // Setters
-  protected async prompt(constraints: MediaStreamConstraints): Promise<MediaStream> {
+  protected async prompt(constraints: MediaStreamConstraints, type: MediaDeviceType): Promise<MediaStream> {
     this.resetTracks();
-    return await navigator.mediaDevices.getUserMedia(constraints);
+
+    switch (type) {
+      case MediaDeviceType.SCREEN:
+        //@ts-ignore
+        return await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true});
+      case MediaDeviceType.WEBCAM:
+      case MediaDeviceType.MICROPHONE:
+        return await navigator.mediaDevices.getUserMedia(constraints);
+    }
   }
 
   protected setMediaStream(stream: MediaStream) {
     this.stream = stream;
 
-    for (let callback of this.onAvailableCallback) {
-      callback(stream);
-    }
+    this.eventHandler.emit("available", stream)
   }
 
   protected async setPermission(status: "granted" | "denied"): Promise<void> {
     this.permission = status;
 
-    for (let callback of this.onPermissionChangeCallback) {
-      await callback(status);
-    }
+    this.eventHandler.emit("permission", status);
   }
 
   /**
@@ -64,15 +72,17 @@ abstract class MediaDevice {
         track.stop();
       });
 
-      for (let callback of this.onUnavailableCallback) {
-        callback();
-      }
+      this.eventHandler.emit("unavailable");
     }
   }
 
   // Getters
   public getPermission(): "granted" | "denied" | "unasked" {
     return this.permission;
+  }
+
+  public hasStream(): boolean {
+    return !!this.stream;
   }
 
   public getMediaStream(): MediaStream {
@@ -92,3 +102,4 @@ abstract class MediaDevice {
 }
 
 export default MediaDevice;
+export { MediaDeviceType };

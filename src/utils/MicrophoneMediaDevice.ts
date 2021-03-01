@@ -1,4 +1,4 @@
-import MediaDevice from "./MediaDevice";
+import MediaDevice, { MediaDeviceType } from "./MediaDevice";
 
 class MicrophoneMediaDevice extends MediaDevice {
 
@@ -17,7 +17,7 @@ class MicrophoneMediaDevice extends MediaDevice {
   public async select(deviceId: string | undefined = undefined) {
     try {
       const constraints: MediaStreamConstraints = !deviceId ? { audio: true } : { audio: { deviceId: { exact: deviceId } } };
-      const stream = await this.prompt(constraints);
+      const stream = await this.prompt(constraints, MediaDeviceType.MICROPHONE);
 
       await this.setPermission("granted");
       this.setMediaStream(stream);

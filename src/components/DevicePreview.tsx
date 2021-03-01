@@ -1,6 +1,6 @@
 import { Component } from "react";
-import WebcamMediaDevice from "./utils/WebcamMediaDevice";
-import MicrophoneMediaDevice from "./utils/MicrophoneMediaDevice";
+import WebcamMediaDevice from "../utils/WebcamMediaDevice";
+import MicrophoneMediaDevice from "../utils/MicrophoneMediaDevice";
 
 interface State {
   webcams: MediaDevices,
@@ -27,7 +27,29 @@ class DevicePreview extends Component<Props, State> {
     microphones: { options: [], status: "awaiting" },
   }
 
-  public componentDidMount() {
+  public async componentDidMount() {
+    if(this.microphone.getPermission() === "granted") {
+      const options = await this.microphone.options();
+      this.setState({
+        ...this.state,
+        microphones: {
+          status: "granted",
+          options: options
+        },
+      });
+    }
+
+    if(this.webcam.getPermission() === "granted") {
+      const options = await this.webcam.options();
+      this.setState({
+        ...this.state,
+        webcams: {
+          status: "granted",
+          options: options
+        },
+      });
+    }
+
 
     this.microphone.onPermissionChange(async (status: "granted" | "denied") => {
       if (status === "granted") {
