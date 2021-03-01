@@ -17,7 +17,7 @@ type MediaDevices = {
   status: "awaiting" | "granted" | "denied"
 }
 
-class DevicePreview extends Component<Props, State> {
+class MediaDeviceSelector extends Component<Props, State> {
 
   private webcam: WebcamMediaDevice = this.props.webcam;
   private microphone: MicrophoneMediaDevice = this.props.microphone;
@@ -154,4 +154,4 @@ class DevicePreview extends Component<Props, State> {
   }
 }
 
-export default DevicePreview;
+export default MediaDeviceSelector;

@@ -1,6 +1,6 @@
 import { Component } from "react";
 import WebcamPreview from "../components/WebcamPreview";
-import MediaDeviceSelector from "../components/DevicePreview";
+import MediaDeviceSelector from "../components/MediaDeviceSelector";
 import RecordPreviewButton from "../components/RecordPreviewButton";
 import WebcamMediaDevice from "../utils/WebcamMediaDevice";
 import MicrophoneMediaDevice from "../utils/MicrophoneMediaDevice";
@@ -17,9 +17,6 @@ class SettingsPage extends Component<Props, any> {
   public render() {
     const webcam: WebcamMediaDevice = this.devices.getWebcam();
     const microphone: MicrophoneMediaDevice = this.devices.getMicrophone();
-
-    console.log("Settings page webcam: ", webcam);
-    console.log("Settings page mic: ", microphone);
 
     return (
       <div>
