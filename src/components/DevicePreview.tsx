@@ -51,7 +51,7 @@ class DevicePreview extends Component<Props, State> {
     }
 
 
-    this.microphone.onPermissionChange(async (status: "granted" | "denied") => {
+    this.microphone.onPermissionEvent(async (status: "granted" | "denied") => {
       if (status === "granted") {
         try {
           const options = await this.microphone.options();
@@ -75,7 +75,7 @@ class DevicePreview extends Component<Props, State> {
       }
     });
 
-    this.webcam.onPermissionChange(async (status: "granted" | "denied") => {
+    this.webcam.onPermissionEvent(async (status: "granted" | "denied") => {
       if (status === "granted") {
         try {
           const options = await this.webcam.options();

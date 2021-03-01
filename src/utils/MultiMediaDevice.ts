@@ -22,43 +22,43 @@ class MultiMediaDevice {
 
     this.eventHandler = new MediaDeviceEventHandler();
 
-    this.webcam.onAvailable(() => {
+    this.webcam.onAvailableEvent(() => {
       this.setReady(true, MediaDeviceType.WEBCAM);
     });
 
-    this.webcam.onUnavailable(() => {
+    this.webcam.onUnavailableEvent(() => {
       this.setReady(false, MediaDeviceType.WEBCAM);
     })
 
-    this.webcam.onPermissionChange(async status => {
+    this.webcam.onPermissionEvent(async status => {
       if (status === "denied") {
         this.setReady(false, MediaDeviceType.WEBCAM);
       }
     });
 
-    this.microphone.onAvailable(() => {
+    this.microphone.onAvailableEvent(() => {
       this.setReady(true, MediaDeviceType.MICROPHONE);
     });
 
-    this.microphone.onUnavailable(() => {
+    this.microphone.onUnavailableEvent(() => {
       this.setReady(false, MediaDeviceType.MICROPHONE);
     });
 
-    this.microphone.onPermissionChange(async status => {
+    this.microphone.onPermissionEvent(async status => {
       if (status === "denied") {
         this.setReady(false, MediaDeviceType.MICROPHONE);
       }
     });
 
-    this.screen.onAvailable(() => {
+    this.screen.onAvailableEvent(() => {
       this.setReady(true, MediaDeviceType.SCREEN);
     });
 
-    this.screen.onUnavailable(() => {
+    this.screen.onUnavailableEvent(() => {
       this.setReady(false, MediaDeviceType.SCREEN);
     });
 
-    this.screen.onPermissionChange(async status => {
+    this.screen.onPermissionEvent(async status => {
       if (status === "denied") {
         this.setReady(false, MediaDeviceType.SCREEN);
       }

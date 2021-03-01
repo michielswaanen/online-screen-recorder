@@ -17,11 +17,11 @@ class WebcamPreview extends Component<Props> {
       webcamVisual.srcObject = webcam.getMediaStream();
     }
 
-    webcam.onAvailable((stream: MediaStream) => {
+    webcam.onAvailableEvent((stream: MediaStream) => {
       webcamVisual.srcObject = stream;
     });
 
-    webcam.onUnavailable(() => {
+    webcam.onUnavailableEvent(() => {
       webcamVisual.srcObject = null;
     });
   }
