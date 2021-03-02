@@ -16,11 +16,6 @@ class MultiMediaRecorder {
 
   private eventHandler: MediaDeviceEventHandler;
 
-  // Events
-  private onReadyCallback: { (): void }[];
-  private onNotReadyCallback: { (): void }[];
-  private onFinishCallback: { (personRecording: Blob, screenRecording: Blob): void }[];
-
   public constructor(multiMediaDevice: MultiMediaDevice) {
     this.multiMediaDevice = multiMediaDevice;
     this.recordings = { person: undefined, screen: undefined };
@@ -29,10 +24,6 @@ class MultiMediaRecorder {
     const webcam: WebcamMediaDevice = this.multiMediaDevice.getWebcam();
     const microphone: MicrophoneMediaDevice = this.multiMediaDevice.getMicrophone();
     const screen: ScreenMediaDevice = this.multiMediaDevice.getScreen();
-
-    this.onReadyCallback = [];
-    this.onNotReadyCallback = [];
-    this.onFinishCallback = [];
 
     this.multiMediaDevice.onReadyEvent(() => {
       const personStream = new MediaStream([webcam.getTrack(), microphone.getTrack()]);
@@ -44,53 +35,92 @@ class MultiMediaRecorder {
 
       this.personRecorder.ondataavailable = (event: BlobEvent) => {
         this.recordings = {...this.recordings, person: event.data};
-        this.emitReadyEvent();
+
+        if(this.recordings.screen) {
+          this.eventHandler.emit(this.onFinish, this.recordings.person, this.recordings.screen);
+        }
       };
 
       this.screenRecorder.ondataavailable = (event: BlobEvent) => {
         this.recordings = {...this.recordings, screen: event.data};
-        this.emitReadyEvent();
+        if(this.recordings.person) {
+          this.eventHandler.emit(this.onFinish, this.recordings.person, this.recordings.screen);
+        }
       };
-
-      for (let callback of this.onReadyCallback) {
-        callback()
-      }
+      this.eventHandler.emit(this.onReady)
     });
 
     this.multiMediaDevice.onNotReadyEvent(() => {
-      for (let callback of this.onNotReadyCallback) {
-        callback()
-      }
+      this.eventHandler.emit(this.onNotReady);
     });
   }
 
   // Events
   public onReady(cb: () => void) {
-    this.onReadyCallback.push(cb);
+    this.eventHandler.register(this.onReady, cb);
   }
 
   public onNotReady(cb: () => void) {
-    this.onNotReadyCallback.push(cb);
+    this.eventHandler.register(this.onNotReady, cb);
   }
 
   public onFinish(cb: (personRecording: Blob, screenRecording: Blob) => void) {
-    this.onFinishCallback.push(cb);
+    this.eventHandler.register(this.onFinish, cb);
+  }
+
+  public onStart(cb: (webcam: MediaStream, screen: MediaStream) => void) {
+    this.eventHandler.register(this.onStart, cb);
+  }
+
+  public onStop(cb: () => void) {
+    this.eventHandler.register(this.onStop, cb);
+  }
+
+  public unregisterEvent(event: (...args: any[]) => void, cb: (...args: any[]) => void) {
+    this.eventHandler.unregister(event, cb);
   }
 
   // Functions
   public start(): void {
     this.personRecorder.start();
     this.screenRecorder.start();
+
+    const webcam: MediaStream = this.multiMediaDevice.getWebcam().getMediaStream();
+    const screen: MediaStream = this.multiMediaDevice.getScreen().getMediaStream();
+
+    this.eventHandler.emit(this.onStart, webcam, screen);
   }
 
   public stop(): void {
     this.personRecorder.stop();
     this.screenRecorder.stop();
+    this.eventHandler.emit(this.onStop);
+  }
+
+  public reset(): void {
+    this.recordings = {person: undefined, screen: undefined};
+  }
+
+  public getPersonRecording(): Blob {
+    if(this.recordings.person === undefined)
+      throw new Error("No recording of person available");
+
+    return this.recordings.person;
+  }
+
+  public getScreenRecording(): Blob {
+    if(this.recordings.screen === undefined)
+      throw new Error("No recording of screen available");
+
+    return this.recordings.screen;
+  }
+
+  public isRecordingAvailable(): boolean {
+    return this.recordings.screen !== undefined && this.recordings.person !== undefined;
   }
 
   private getMimeType(query: { audio: boolean, video: boolean }): string {
     const generator = new MimeTypeGenerator();
-
 
     if (query.video) {
       const types: string[] = mimeTypes.video.types;
@@ -103,14 +133,6 @@ class MultiMediaRecorder {
     const codecs: string[] = mimeTypes.audio.types;
 
     return generator.findOptimalMimeType(types, codecs);
-  }
-
-  private emitReadyEvent() {
-    if(this.recordings.person !== undefined && this.recordings.screen !== undefined) {
-      for (let callback of this.onFinishCallback) {
-        callback(this.recordings.person, this.recordings.screen);
-      }
-    }
   }
 }
 

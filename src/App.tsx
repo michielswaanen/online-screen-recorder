@@ -22,7 +22,7 @@ class App extends Component<any, State> {
     phase: "permission"
   }
 
-  private continueCallback() {
+  private continueCallback = () => {
     switch (this.state.phase) {
       case "permission":
         this.setState({phase: "settings"});
@@ -42,9 +42,9 @@ class App extends Component<any, State> {
   public render() {
     switch (this.state.phase) {
       case "permission":
-        return <PermissionPage devices={this.devices} continueCallback={this.continueCallback.bind(this)} />;
+        return <PermissionPage devices={this.devices} continueCallback={this.continueCallback} />;
       case "settings":
-        return <SettingsPage devices={this.devices} />;
+        return <SettingsPage devices={this.devices} continueCallback={this.continueCallback} />;
       default:
         return <Record devices={this.devices} />
     }

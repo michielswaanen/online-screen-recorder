@@ -1,9 +1,8 @@
 import { Component } from "react";
 import MultiMediaRecorder from "../utils/MultiMediaRecorder";
-import MultiMediaDevice from "../utils/MultiMediaDevice";
 
 interface Props {
-  devices: MultiMediaDevice
+  recorder: MultiMediaRecorder
 }
 
 interface State {
@@ -13,8 +12,7 @@ interface State {
 
 class RecordPreviewButton extends Component<Props, State> {
 
-  private readonly multiMediaDevice: MultiMediaDevice = this.props.devices;
-  private readonly recorder: MultiMediaRecorder = new MultiMediaRecorder(this.multiMediaDevice);
+  private readonly recorder: MultiMediaRecorder = this.props.recorder;
 
   public state: State = {
     started: false,
@@ -22,19 +20,22 @@ class RecordPreviewButton extends Component<Props, State> {
   }
 
   public componentDidMount() {
-    this.recorder.onReady(() => {
-      this.setState({ allowed: true });
-    });
+    this.recorder.onReady(this.setButtonActive);
+    this.recorder.onNotReady(this.setButtonInactive);
+  }
 
-    this.recorder.onNotReady(() => {
-      this.setState({ allowed: false });
-    });
+  public componentWillUnmount() {
+    this.recorder.unregisterEvent(this.recorder.onReady, this.setButtonActive);
+    this.recorder.unregisterEvent(this.recorder.onNotReady, this.setButtonInactive);
+  }
 
-    this.recorder.onFinish(recording => {
-      const video: HTMLVideoElement = document.getElementById("recording") as HTMLVideoElement;
-      video.srcObject = null;
-      video.src = URL.createObjectURL(recording);
-    });
+  // Callbacks
+  private setButtonActive = () => {
+    this.setState({ allowed: true });
+  }
+
+  private setButtonInactive = () => {
+    this.setState({ allowed: false });
   }
 
   public renderButton() {
@@ -46,25 +47,14 @@ class RecordPreviewButton extends Component<Props, State> {
       )
     }
 
-    if (this.state.started) {
-      return (
-        <button onClick={ () => {
-          this.recorder.stop();
-          this.setState({ started: false });
-        } }>
-          Stop Test
-        </button>
-      )
-    } else {
-      return (
-        <button onClick={ () => {
-          this.recorder.start();
-          this.setState({ started: true });
-        } }>
-          Start Test
-        </button>
-      )
-    }
+    return (
+      <button onClick={ () => {
+        this.recorder.start();
+        this.setState({ started: true });
+      } } disabled={this.state.started}>
+        Start Test
+      </button>
+    )
   }
 
   public render() {

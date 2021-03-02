@@ -4,7 +4,6 @@ class MediaDeviceEventHandler {
 
   private map: Map<(...args: any[]) => void, Array<(...args: any[]) => void>>
 
-
   constructor() {
     this.map = new Map();
   }
@@ -17,11 +16,7 @@ class MediaDeviceEventHandler {
 
   public unregister(event: (...args: any[]) => void, callback: (...args: any[]) => void) {
     let callbacks = this.map.get(event) || new Array<() => void>();
-    console.log("BEFORE")
-    console.log(callbacks)
     const newCallbacks = callbacks.filter(item => item !== callback);
-    console.log("AFTER")
-    console.log(newCallbacks)
     this.map.set(event, newCallbacks);
   }
 
@@ -31,7 +26,6 @@ class MediaDeviceEventHandler {
       cb(...data);
     }
   }
-
 }
 
 export default MediaDeviceEventHandler;
