@@ -22,84 +22,82 @@ class MediaDeviceSelector extends Component<Props, State> {
   private webcam: WebcamMediaDevice = this.props.webcam;
   private microphone: MicrophoneMediaDevice = this.props.microphone;
 
+  // State
   public state: State = {
     webcams: { options: [], status: "awaiting" },
     microphones: { options: [], status: "awaiting" },
   }
 
+  // Lifecycle
   public async componentDidMount() {
+
     if(this.microphone.getPermission() === "granted") {
-      const options = await this.microphone.options();
-      this.setState({
-        ...this.state,
-        microphones: {
-          status: "granted",
-          options: options
-        },
-      });
+      await this.handleMicrophoneSelector("granted");
     }
 
     if(this.webcam.getPermission() === "granted") {
-      const options = await this.webcam.options();
+      await this.handleWebcamSelector("granted");
+    }
+
+    this.microphone.onPermissionEvent(this.handleMicrophoneSelector);
+    this.webcam.onPermissionEvent(this.handleWebcamSelector);
+  }
+
+  public componentWillUnmount() {
+    this.microphone.unregisterEvent(this.microphone.onPermissionEvent, this.handleMicrophoneSelector);
+    this.webcam.unregisterEvent(this.webcam.onPermissionEvent, this.handleWebcamSelector);
+  }
+
+  // Events
+  private handleWebcamSelector = async (status: "granted" | "denied") => {
+    if (status === "granted") {
+      try {
+        const options = await this.webcam.options();
+        this.setState({
+          webcams: {
+            status: "granted",
+            options: options
+          },
+        });
+      } catch (e) {
+        console.log("Something went wrong")
+        throw new Error("Something went wrong while permission modification")
+      }
+    } else {
       this.setState({
-        ...this.state,
         webcams: {
-          status: "granted",
-          options: options
+          status: "denied",
+          options: []
         },
       });
     }
-
-
-    this.microphone.onPermissionEvent(async (status: "granted" | "denied") => {
-      if (status === "granted") {
-        try {
-          const options = await this.microphone.options();
-          this.setState({
-            microphones: {
-              status: "granted",
-              options: options
-            },
-          });
-        } catch (e) {
-          console.log("Something went wrong")
-          throw new Error("Something went wrong while permission modification")
-        }
-      } else {
-        this.setState({
-          microphones: {
-            status: "denied",
-            options: []
-          },
-        });
-      }
-    });
-
-    this.webcam.onPermissionEvent(async (status: "granted" | "denied") => {
-      if (status === "granted") {
-        try {
-          const options = await this.webcam.options();
-          this.setState({
-            webcams: {
-              status: "granted",
-              options: options
-            },
-          });
-        } catch (e) {
-          console.log("Something went wrong")
-          throw new Error("Something went wrong while permission modification")
-        }
-      } else {
-        this.setState({
-          webcams: {
-            status: "denied",
-            options: []
-          },
-        });
-      }
-    });
   }
 
+  private handleMicrophoneSelector = async (status: "granted" | "denied") => {
+    if (status === "granted") {
+      try {
+        const options = await this.microphone.options();
+        this.setState({
+          microphones: {
+            status: "granted",
+            options: options
+          },
+        });
+      } catch (e) {
+        console.log("Something went wrong")
+        throw new Error("Something went wrong while permission modification")
+      }
+    } else {
+      this.setState({
+        microphones: {
+          status: "denied",
+          options: []
+        },
+      });
+    }
+  }
+
+  // Render
   public renderWebcamSelection() {
     if (this.state.webcams.status === "granted") {
       return <div>

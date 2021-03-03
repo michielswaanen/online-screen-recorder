@@ -37,6 +37,10 @@ abstract class MediaDevice {
     this.eventHandler.register(this.onUnavailableEvent, cb);
   }
 
+  public unregisterEvent(event: (...args: any[]) => void, cb: (...args: any[]) => void) {
+    this.eventHandler.unregister(event, cb);
+  }
+
   // Setters
   protected async prompt(constraints: MediaStreamConstraints, type: MediaDeviceType): Promise<MediaStream> {
     this.resetTracks();

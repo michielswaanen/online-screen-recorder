@@ -119,6 +119,10 @@ class MultiMediaRecorder {
     return this.recordings.screen !== undefined && this.recordings.person !== undefined;
   }
 
+  public isReady(): boolean {
+    return this.multiMediaDevice.areReady();
+  }
+
   private getMimeType(query: { audio: boolean, video: boolean }): string {
     const generator = new MimeTypeGenerator();
 

@@ -20,6 +20,10 @@ class RecordPreviewButton extends Component<Props, State> {
   }
 
   public componentDidMount() {
+    if(this.recorder.isReady()) {
+      this.setButtonActive();
+    }
+
     this.recorder.onReady(this.setButtonActive);
     this.recorder.onNotReady(this.setButtonInactive);
   }

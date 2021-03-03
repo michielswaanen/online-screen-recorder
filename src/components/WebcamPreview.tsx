@@ -9,21 +9,31 @@ interface Props {
 
 class WebcamPreview extends Component<Props> {
 
+  private webcam: WebcamMediaDevice = this.props.webcam;
+
   public componentDidMount() {
-    const webcam: WebcamMediaDevice = this.props.webcam;
     const webcamVisual: HTMLVideoElement = document.getElementById(WEBCAM_ELEMENT_ID) as HTMLVideoElement;
 
-    if(webcam.hasStream()) {
-      webcamVisual.srcObject = webcam.getMediaStream();
-    }
+    if(this.webcam.hasStream())
+      webcamVisual.srcObject = this.webcam.getMediaStream();
 
-    webcam.onAvailableEvent((stream: MediaStream) => {
-      webcamVisual.srcObject = stream;
-    });
+    this.webcam.onAvailableEvent(this.showVideo);
+    this.webcam.onUnavailableEvent(this.hideVideo);
+  }
 
-    webcam.onUnavailableEvent(() => {
-      webcamVisual.srcObject = null;
-    });
+  public componentWillUnmount() {
+    this.webcam.unregisterEvent(this.webcam.onAvailableEvent, this.showVideo);
+    this.webcam.unregisterEvent(this.webcam.onUnavailableEvent, this.hideVideo);
+  }
+
+  private showVideo = (stream: MediaStream)  => {
+    const webcamVisual: HTMLVideoElement = document.getElementById(WEBCAM_ELEMENT_ID) as HTMLVideoElement;
+    webcamVisual.srcObject = stream;
+  }
+
+  private hideVideo = () => {
+    const webcamVisual: HTMLVideoElement = document.getElementById(WEBCAM_ELEMENT_ID) as HTMLVideoElement;
+    webcamVisual.srcObject = null;
   }
 
   public render() {
