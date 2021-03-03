@@ -21,34 +21,11 @@ class MultiMediaRecorder {
     this.recordings = { person: undefined, screen: undefined };
     this.eventHandler = new MediaDeviceEventHandler();
 
-    const webcam: WebcamMediaDevice = this.multiMediaDevice.getWebcam();
-    const microphone: MicrophoneMediaDevice = this.multiMediaDevice.getMicrophone();
-    const screen: ScreenMediaDevice = this.multiMediaDevice.getScreen();
+    if(this.multiMediaDevice.areReady()) {
+      this.initializeRecorder();
+    }
 
-    this.multiMediaDevice.onReadyEvent(() => {
-      const personStream = new MediaStream([webcam.getTrack(), microphone.getTrack()]);
-      const screenStream = new MediaStream([screen.getTrack()]);
-      const mimeType = this.getMimeType({ video: true, audio: true });
-
-      this.personRecorder = new MediaRecorder(personStream, { mimeType: mimeType });
-      this.screenRecorder = new MediaRecorder(screenStream)
-
-      this.personRecorder.ondataavailable = (event: BlobEvent) => {
-        this.recordings = {...this.recordings, person: event.data};
-
-        if(this.recordings.screen) {
-          this.eventHandler.emit(this.onFinish, this.recordings.person, this.recordings.screen);
-        }
-      };
-
-      this.screenRecorder.ondataavailable = (event: BlobEvent) => {
-        this.recordings = {...this.recordings, screen: event.data};
-        if(this.recordings.person) {
-          this.eventHandler.emit(this.onFinish, this.recordings.person, this.recordings.screen);
-        }
-      };
-      this.eventHandler.emit(this.onReady)
-    });
+    this.multiMediaDevice.onReadyEvent(this.initializeRecorder);
 
     this.multiMediaDevice.onNotReadyEvent(() => {
       this.eventHandler.emit(this.onNotReady);
@@ -81,7 +58,7 @@ class MultiMediaRecorder {
   }
 
   // Functions
-  public start(): void {
+  public start = () => {
     this.personRecorder.start();
     this.screenRecorder.start();
 
@@ -91,7 +68,7 @@ class MultiMediaRecorder {
     this.eventHandler.emit(this.onStart, webcam, screen);
   }
 
-  public stop(): void {
+  public stop = () => {
     this.personRecorder.stop();
     this.screenRecorder.stop();
     this.eventHandler.emit(this.onStop);
@@ -121,6 +98,36 @@ class MultiMediaRecorder {
 
   public isReady(): boolean {
     return this.multiMediaDevice.areReady();
+  }
+
+  private initializeRecorder = () => {
+
+    const webcam: WebcamMediaDevice = this.multiMediaDevice.getWebcam();
+    const microphone: MicrophoneMediaDevice = this.multiMediaDevice.getMicrophone();
+    const screen: ScreenMediaDevice = this.multiMediaDevice.getScreen();
+
+    const personStream = new MediaStream([webcam.getTrack(), microphone.getTrack()]);
+    const screenStream = new MediaStream([screen.getTrack()]);
+    const mimeType = this.getMimeType({ video: true, audio: true });
+
+    this.personRecorder = new MediaRecorder(personStream, { mimeType: mimeType });
+    this.screenRecorder = new MediaRecorder(screenStream)
+
+    this.personRecorder.ondataavailable = (event: BlobEvent) => {
+      this.recordings = {...this.recordings, person: event.data};
+
+      if(this.recordings.screen) {
+        this.eventHandler.emit(this.onFinish, this.recordings.person, this.recordings.screen);
+      }
+    };
+
+    this.screenRecorder.ondataavailable = (event: BlobEvent) => {
+      this.recordings = {...this.recordings, screen: event.data};
+      if(this.recordings.person) {
+        this.eventHandler.emit(this.onFinish, this.recordings.person, this.recordings.screen);
+      }
+    };
+    this.eventHandler.emit(this.onReady);
   }
 
   private getMimeType(query: { audio: boolean, video: boolean }): string {

@@ -17,7 +17,7 @@ class LivePreview extends Component<Props, State> {
   private readonly recorder: MultiMediaRecorder = this.props.recorder;
 
   public state: State = {
-    timer: 10
+    timer: 5
   }
 
   // Lifecycle

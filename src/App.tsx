@@ -2,13 +2,13 @@ import { Component } from "react";
 import WebcamMediaDevice from "./utils/WebcamMediaDevice";
 import MicrophoneMediaDevice from "./utils/MicrophoneMediaDevice";
 import SettingsPage from "./pages/SettingsPage";
-import Record from "./Record";
+import RecordPage from "./pages/RecordPage";
 import ScreenMediaDevice from "./utils/ScreenMediaDevice";
 import MultiMediaDevice from "./utils/MultiMediaDevice";
 import PermissionPage from "./pages/PermissionPage";
 
 interface State {
-  phase: "permission" | "settings" | "record" | "result"
+  phase: "permission" | "settings" | "record"
 }
 
 class App extends Component<any, State> {
@@ -31,9 +31,6 @@ class App extends Component<any, State> {
         this.setState({phase: "record"});
         break;
       case "record":
-        this.setState({phase: "result"});
-        break;
-      case "result":
         this.setState({phase: "permission"});
         break;
     }
@@ -45,8 +42,8 @@ class App extends Component<any, State> {
         return <PermissionPage devices={this.devices} continueCallback={this.continueCallback} />;
       case "settings":
         return <SettingsPage devices={this.devices} continueCallback={this.continueCallback} />;
-      default:
-        return <Record devices={this.devices} />
+      case "record":
+        return <RecordPage devices={this.devices} continueCallback={this.continueCallback} />;
     }
   }
 }
