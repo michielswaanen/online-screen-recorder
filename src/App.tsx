@@ -13,10 +13,10 @@ interface State {
 
 class App extends Component<any, State> {
 
-  private readonly webcam: WebcamMediaDevice = new WebcamMediaDevice();
-  private readonly microphone: MicrophoneMediaDevice = new MicrophoneMediaDevice();
-  private readonly screen: ScreenMediaDevice = new ScreenMediaDevice();
-  private readonly devices: MultiMediaDevice = new MultiMediaDevice(this.webcam, this.microphone, this.screen);
+  private webcam: WebcamMediaDevice = new WebcamMediaDevice();
+  private microphone: MicrophoneMediaDevice = new MicrophoneMediaDevice();
+  private screen: ScreenMediaDevice = new ScreenMediaDevice();
+  private devices: MultiMediaDevice = new MultiMediaDevice(this.webcam, this.microphone, this.screen);
 
   public state: State = {
     phase: "permission"

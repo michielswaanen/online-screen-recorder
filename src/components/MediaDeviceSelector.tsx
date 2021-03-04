@@ -1,15 +1,17 @@
 import { Component } from "react";
 import WebcamMediaDevice from "../utils/WebcamMediaDevice";
 import MicrophoneMediaDevice from "../utils/MicrophoneMediaDevice";
+import MultiMediaDevice from "../utils/MultiMediaDevice";
+import ScreenMediaDevice from "../utils/ScreenMediaDevice";
 
 interface State {
   webcams: MediaDevices,
   microphones: MediaDevices,
+  screens: { status: "awaiting" | "granted" | "denied" }
 }
 
 interface Props {
-  webcam: WebcamMediaDevice,
-  microphone: MicrophoneMediaDevice,
+  devices: MultiMediaDevice,
 }
 
 type MediaDevices = {
@@ -19,23 +21,25 @@ type MediaDevices = {
 
 class MediaDeviceSelector extends Component<Props, State> {
 
-  private webcam: WebcamMediaDevice = this.props.webcam;
-  private microphone: MicrophoneMediaDevice = this.props.microphone;
+  private webcam: WebcamMediaDevice = this.props.devices.getWebcam();
+  private microphone: MicrophoneMediaDevice = this.props.devices.getMicrophone();
+  private screen: ScreenMediaDevice = this.props.devices.getScreen();
 
   // State
   public state: State = {
     webcams: { options: [], status: "awaiting" },
     microphones: { options: [], status: "awaiting" },
+    screens: { status: "awaiting" },
   }
 
   // Lifecycle
   public async componentDidMount() {
 
-    if(this.microphone.getPermission() === "granted") {
+    if (this.microphone.getPermission() === "granted") {
       await this.handleMicrophoneSelector("granted");
     }
 
-    if(this.webcam.getPermission() === "granted") {
+    if (this.webcam.getPermission() === "granted") {
       await this.handleWebcamSelector("granted");
     }
 
@@ -60,7 +64,6 @@ class MediaDeviceSelector extends Component<Props, State> {
           },
         });
       } catch (e) {
-        console.log("Something went wrong")
         throw new Error("Something went wrong while permission modification")
       }
     } else {
@@ -84,7 +87,6 @@ class MediaDeviceSelector extends Component<Props, State> {
           },
         });
       } catch (e) {
-        console.log("Something went wrong")
         throw new Error("Something went wrong while permission modification")
       }
     } else {
@@ -140,10 +142,19 @@ class MediaDeviceSelector extends Component<Props, State> {
     }
   }
 
+  public renderScreenSelection() {
+    return (
+      <div>
+        <button onClick={async () => await this.screen.select()}>Change Screen</button>
+      </div>
+    )
+  }
+
   public render() {
     return (
       <div>
         <div>
+          { this.renderScreenSelection() }
           { this.renderWebcamSelection() }
           { this.renderMicrophoneSelection() }
         </div>

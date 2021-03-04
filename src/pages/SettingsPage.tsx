@@ -8,6 +8,8 @@ import MultiMediaDevice from "../utils/MultiMediaDevice";
 import MultiMediaRecorder from "../utils/MultiMediaRecorder";
 import RecordedPreview from "../components/RecordedPreview";
 import LivePreview from "../components/LivePreview";
+import ScreenPreview from "../components/ScreenPreview";
+import ScreenMediaDevice from "../utils/ScreenMediaDevice";
 
 interface Props {
   devices: MultiMediaDevice
@@ -59,12 +61,13 @@ class SettingsPage extends Component<Props, State> {
   // Render
   public renderSetup() {
     const webcam: WebcamMediaDevice = this.devices.getWebcam();
-    const microphone: MicrophoneMediaDevice = this.devices.getMicrophone();
+    const screen: ScreenMediaDevice = this.devices.getScreen();
 
     return(
       <div>
         <WebcamPreview webcam={ webcam }/>
-        <MediaDeviceSelector webcam={ webcam } microphone={ microphone }/>
+        <ScreenPreview screen={ screen }/>
+        <MediaDeviceSelector devices={this.devices}/>
         <RecordPreviewButton recorder={this.recorder} />
       </div>
     )
